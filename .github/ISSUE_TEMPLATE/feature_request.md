@@ -10,6 +10,9 @@ assignees: ''
 **Describe the problem you are trying to solve with this feature**
 A clear and concise description of why this feature should be added.
 
+**Acceptance criteria**
+A clear and concise description of what needs to happen to consider this feature completed
+
 **Describe the solution you'd like**
 A clear and concise description of what you want to happen.
 
