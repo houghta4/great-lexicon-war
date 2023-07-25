@@ -25,6 +25,7 @@ impl Display for EnemyWord {
 #[derive(Component)]
 pub struct Enemy {
     pub health: usize, // Percentage [0, 100]
+    pub direction: Vec2,
     pub word: EnemyWord,
 }
 
@@ -32,6 +33,7 @@ impl Default for Enemy {
     fn default() -> Self {
         Enemy {
             health: 100,
+            direction: Vec2::default(),
             word: EnemyWord::default(),
         }
     }
