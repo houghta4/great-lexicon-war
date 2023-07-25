@@ -1,1 +1,172 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, window::PrimaryWindow};
+
+use crate::components::{AnimationIndices, AnimationTimer};
+use crate::game::enemy::components::*;
+use crate::game::SpriteSheetInfo;
+
+// https://github.com/bevyengine/bevy/blob/main/examples/2d/sprite_sheet.rs
+
+const SOLDIER_01_IDLE: SpriteSheetInfo = SpriteSheetInfo {
+    path: "sprites/soldier_01/Idle.png",
+    x: 128.0,
+    y: 128.0,
+    cols: 7,
+    rows: 1,
+};
+const SOLDIER_01_RUN: SpriteSheetInfo = SpriteSheetInfo {
+    path: "sprites/soldier_01/Run.png",
+    x: 128.0,
+    y: 128.0,
+    cols: 7,
+    rows: 1,
+};
+
+// Sometimes the edges are white. Possible issues: z-index fighting, need background
+pub fn animate_sprite(
+    time: Res<Time>,
+    mut enemy_q: Query<
+        (
+            &AnimationIndices,
+            &mut AnimationTimer,
+            &mut TextureAtlasSprite,
+        ),
+        With<Enemy>,
+    >,
+) {
+    enemy_q
+        .iter_mut()
+        .for_each(|(indices, mut timer, mut sprite)| {
+            timer.tick(time.delta());
+            if timer.just_finished() {
+                sprite.index = if sprite.index == indices.last {
+                    indices.first
+                } else {
+                    sprite.index + 1
+                };
+            }
+        });
+}
+
+pub fn spawn_single_enemy(
+    mut commands: Commands,
+    win_q: Query<&Window, With<PrimaryWindow>>,
+    asset_server: Res<AssetServer>,
+    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
+) {
+    let win = win_q.get_single().unwrap();
+
+    let cur_sprite = SOLDIER_01_IDLE;
+
+    let texture_handle = asset_server.load(cur_sprite.path);
+    let texture_atlas = TextureAtlas::from_grid(
+        texture_handle,
+        Vec2::new(cur_sprite.x, cur_sprite.y),
+        cur_sprite.cols,
+        cur_sprite.rows,
+        None,
+        None,
+    );
+    let texture_atlas_handle = texture_atlases.add(texture_atlas);
+    let animation_indices = AnimationIndices { first: 0, last: 6 };
+
+    commands.spawn((
+        SpriteSheetBundle {
+            texture_atlas: texture_atlas_handle,
+            sprite: TextureAtlasSprite::new(0),
+            transform: Transform::from_xyz(win.width() / 2.0 - 50.0, win.height() / 2.0, 1.0),
+
+            ..default()
+        },
+        animation_indices,
+        AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating)),
+        Enemy {
+            word: EnemyWord {
+                word: "zoinks".into(),
+                ..default()
+            },
+            ..default()
+        },
+    ));
+    println!("Spawned single enemy.");
+}
+
+pub fn despawn_enemies(mut commands: Commands, enemy_q: Query<Entity, With<Enemy>>) {
+    println!("Removing all enemies");
+    enemy_q.iter().for_each(|enemy_entity| {
+        commands.entity(enemy_entity).despawn();
+    });
+}
+
+// TODO: How to tell how many enemeis we want? Should there just be one per n seconds? Resource inserted at each level telling how many to spawn?
+// Proposal: each level inserts a resource containing all data we will need. Initial enemey number, how often they spawn, words to add to enemies
+pub fn spawn_enemies(
+    mut commands: Commands,
+    win_q: Query<&Window, With<PrimaryWindow>>,
+    asset_server: Res<AssetServer>,
+    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
+) {
+    let win = win_q.get_single().unwrap();
+
+    let words = vec!["cat", "rat", "delicious", "delete", "banana"];
+
+    for (i, w) in words.iter().enumerate() {
+        println!("w: {w}");
+        let cur_sprite = SOLDIER_01_RUN;
+
+        let texture_handle = asset_server.load(cur_sprite.path);
+        let texture_atlas = TextureAtlas::from_grid(
+            texture_handle,
+            Vec2::new(cur_sprite.x, cur_sprite.y),
+            cur_sprite.cols,
+            cur_sprite.rows,
+            None,
+            None,
+        );
+        let texture_atlas_handle = texture_atlases.add(texture_atlas);
+        let animation_indices = AnimationIndices { first: 0, last: 6 };
+        let x_offset = i * 130;
+        let rotate = if i % 2 == 0 {
+            Quat::from_rotation_y(std::f32::consts::PI)
+        } else {
+            Quat::default()
+        };
+        let transform = Transform::from_xyz(
+            win.width() / 4.0 + (x_offset as f32),
+            win.height() / 2.0 - 130.0,
+            1.0,
+        )
+        .with_rotation(rotate);
+
+        commands.spawn((
+            SpriteSheetBundle {
+                texture_atlas: texture_atlas_handle,
+                sprite: TextureAtlasSprite::new(0),
+                transform: transform,
+
+                ..default()
+            },
+            animation_indices,
+            AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating)),
+            Enemy {
+                word: EnemyWord {
+                    word: w.to_string(),
+                    ..default()
+                },
+                ..default()
+            },
+        ));
+        println!("Spawned enemy: {i}.");
+    }
+}
+
+#[allow(dead_code)]
+pub fn print_enemy_words(enemy_q: Query<&Enemy, With<Enemy>>) {
+    if enemy_q.is_empty() {
+        println!("empty enemy_word query");
+    } else {
+        println!("<<--->>");
+    }
+    enemy_q
+        .iter()
+        .for_each(|enemy| println!("enemy_word: {}", enemy.word));
+}

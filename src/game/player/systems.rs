@@ -16,7 +16,7 @@ pub fn spawn_player(
 
     commands.spawn((
         SpriteBundle {
-            transform: Transform::from_xyz(win.width() / 2.0, win.height() / 2.0, 0.0),
+            transform: Transform::from_xyz(win.width() / 2.0, win.height() / 2.0, 1.0),
             texture: asset_server.load("sprites/player_01.png"),
             ..default()
         },
@@ -66,21 +66,4 @@ pub fn player_movement(
         //time.delta_seconds() can be thought of as time (as f32) since the last frame
         transform.translation += direction * PLAYER_SPEED * time.delta_seconds();
     }
-}
-
-// TODO: Remove after testing. This was just to see if camera tracking was working! (it is)
-pub fn spawn_player2(
-    mut commands: Commands,
-    win_q: Query<&Window, With<PrimaryWindow>>,
-    asset_server: Res<AssetServer>,
-) {
-    // normally can't just unwrap, but this is guaranteed to exist from Bevy
-    let win = win_q.get_single().unwrap();
-
-    commands.spawn(SpriteBundle {
-        transform: Transform::from_xyz(win.width() / 2.0 + 20.0, win.height() / 2.0 + 20.0, 0.0),
-        texture: asset_server.load("sprites/player_01.png"),
-        ..default()
-    });
-    println!("Spawned player2.");
 }
