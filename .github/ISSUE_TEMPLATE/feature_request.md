@@ -21,3 +21,6 @@ Add any other context or screenshots about the feature request here.
 
 **Examples**
 Add any examples to help describe the proposed solution
+
+**Issue References**
+Add any issues that this relies on
