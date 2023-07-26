@@ -1,18 +1,16 @@
 use bevy::prelude::*;
 
+mod animations;
 mod camera;
 mod enemy;
 mod player;
 mod resources;
 mod systems;
 
+use animations::AnimationPlugin;
 use camera::CameraPlugin;
 use enemy::EnemyPlugin;
 use player::PlayerPlugin;
-use resources::*;
-use systems::*;
-
-use crate::AppState;
 
 pub struct InGamePlugin;
 
@@ -20,11 +18,7 @@ impl Plugin for InGamePlugin {
     fn build(&self, app: &mut App) {
         app
             // Plugins
-            .add_plugins((PlayerPlugin, CameraPlugin, EnemyPlugin))
-            // Resources
-            .init_resource::<Level>()
-            // Startup systems
-            .add_systems(OnEnter(AppState::InGame), spawn_game_background);
+            .add_plugins((PlayerPlugin, CameraPlugin, EnemyPlugin, AnimationPlugin));
     }
 }
 

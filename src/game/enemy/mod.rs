@@ -17,15 +17,6 @@ impl Plugin for EnemyPlugin {
                 OnEnter(AppState::InGame),
                 (spawn_single_enemy, spawn_enemies),
             )
-            // Systems
-            .add_systems(
-                Update,
-                (
-                    animate_sprite,
-                    // print_enemy_words // constant flow of all enemy words
-                )
-                    .run_if(in_state(AppState::InGame)),
-            )
             // On Exit systems
             .add_systems(OnExit(AppState::InGame), despawn_enemies);
     }

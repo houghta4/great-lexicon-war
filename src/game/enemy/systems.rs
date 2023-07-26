@@ -1,6 +1,7 @@
 use bevy::{prelude::*, window::PrimaryWindow};
 
 use crate::components::{AnimationIndices, AnimationTimer};
+use crate::game::animations::components::AnimateSprite;
 use crate::game::enemy::components::*;
 use crate::game::SpriteSheetInfo;
 
@@ -20,32 +21,6 @@ const SOLDIER_01_RUN: SpriteSheetInfo = SpriteSheetInfo {
     cols: 7,
     rows: 1,
 };
-
-// Sometimes the edges are white. Possible issues: z-index fighting, need background
-pub fn animate_sprite(
-    time: Res<Time>,
-    mut enemy_q: Query<
-        (
-            &AnimationIndices,
-            &mut AnimationTimer,
-            &mut TextureAtlasSprite,
-        ),
-        With<Enemy>,
-    >,
-) {
-    enemy_q
-        .iter_mut()
-        .for_each(|(indices, mut timer, mut sprite)| {
-            timer.tick(time.delta());
-            if timer.just_finished() {
-                sprite.index = if sprite.index == indices.last {
-                    indices.first
-                } else {
-                    sprite.index + 1
-                };
-            }
-        });
-}
 
 pub fn spawn_single_enemy(
     mut commands: Commands,
@@ -79,6 +54,7 @@ pub fn spawn_single_enemy(
         },
         animation_indices,
         AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating)),
+        AnimateSprite,
         Enemy {
             word: EnemyWord {
                 word: "zoinks".into(),
@@ -97,8 +73,7 @@ pub fn despawn_enemies(mut commands: Commands, enemy_q: Query<Entity, With<Enemy
     });
 }
 
-// TODO: How to tell how many enemeis we want? Should there just be one per n seconds? Resource inserted at each level telling how many to spawn?
-// Proposal: each level inserts a resource containing all data we will need. Initial enemey number, how often they spawn, words to add to enemies
+// This will change a lot once
 pub fn spawn_enemies(
     mut commands: Commands,
     win_q: Query<&Window, With<PrimaryWindow>>,
@@ -142,11 +117,11 @@ pub fn spawn_enemies(
                 texture_atlas: texture_atlas_handle,
                 sprite: TextureAtlasSprite::new(0),
                 transform: transform,
-
                 ..default()
             },
             animation_indices,
             AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating)),
+            AnimateSprite,
             Enemy {
                 word: EnemyWord {
                     word: w.to_string(),
