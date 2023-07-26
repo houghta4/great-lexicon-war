@@ -8,6 +8,7 @@ mod level;
 mod player;
 mod resources;
 mod systems;
+mod word_match;
 
 use animations::AnimationPlugin;
 use camera::CameraPlugin;
@@ -15,6 +16,7 @@ use enemy::EnemyPlugin;
 use input::TextInputPlugin;
 use level::LevelPlugin;
 use player::PlayerPlugin;
+use word_match::WordMatchPlugin;
 
 pub struct InGamePlugin;
 
@@ -29,6 +31,7 @@ impl Plugin for InGamePlugin {
                 TextInputPlugin,
                 AnimationPlugin,
                 LevelPlugin,
+                WordMatchPlugin
             ));
     }
 }
