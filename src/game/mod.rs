@@ -6,11 +6,13 @@ mod enemy;
 mod player;
 mod resources;
 mod systems;
+mod input;
 
 use animations::AnimationPlugin;
 use camera::CameraPlugin;
 use enemy::EnemyPlugin;
 use player::PlayerPlugin;
+use input::TextInputPlugin;
 
 pub struct InGamePlugin;
 
@@ -18,7 +20,8 @@ impl Plugin for InGamePlugin {
     fn build(&self, app: &mut App) {
         app
             // Plugins
-            .add_plugins((PlayerPlugin, CameraPlugin, EnemyPlugin, AnimationPlugin));
+            .add_plugins((PlayerPlugin, CameraPlugin, EnemyPlugin, TextInputPlugin, AnimationPlugin));
+
     }
 }
 
