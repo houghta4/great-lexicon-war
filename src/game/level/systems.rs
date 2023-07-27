@@ -72,7 +72,7 @@ pub fn render_level_data(
             let tile_size = Vec2::new(map_data.tilewidth as f32, map_data.tileheight as f32);
             let mut bundles: Vec<(SpriteBundle, RenderedTile)> = vec![];
             // Loop over each layer
-            for layer in map_data.layers.iter() {
+            for (layer_count, layer) in map_data.layers.iter().enumerate() {
                 let data = &layer.data;
                 // For each layer we loop over the data
                 for y in 0..map_data.height {
@@ -80,8 +80,8 @@ pub fn render_level_data(
                         let idx = (y * map_data.width + x) as usize;
                         let position = Vec3::new(
                             start_x + x as f32 * tile_size.x,
-                            start_y + y as f32 * tile_size.y,
-                            0.0,
+                            start_y + (map_data.height - y - 1) as f32 * tile_size.y,
+                            layer_count as f32,
                         );
                         println!("Position: {position}");
                         let sprite_color = match data[idx] {
