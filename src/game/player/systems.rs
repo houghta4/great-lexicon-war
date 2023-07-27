@@ -18,7 +18,7 @@ pub fn spawn_player(
 
     commands.spawn((
         SpriteBundle {
-            transform: Transform::from_xyz(win.width() / 2.0, win.height() / 2.0, 1.0),
+            transform: Transform::from_xyz(win.width() / 2.0 - 100.0, win.height() / 2.0, 1.0),
             texture: asset_server.load("sprites/player_01.png"),
             ..default()
         },

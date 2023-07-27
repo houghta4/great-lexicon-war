@@ -85,7 +85,6 @@ pub fn spawn_enemies(
     let words = vec!["cat", "rat", "delicious", "delete", "banana"];
 
     for (i, w) in words.iter().enumerate() {
-        println!("w: {w}");
         let cur_sprite = SOLDIER_01_RUN;
 
         let texture_handle = asset_server.load(cur_sprite.path);
@@ -130,7 +129,7 @@ pub fn spawn_enemies(
                 ..default()
             },
         ));
-        println!("Spawned enemy: {i}.");
+        println!("Spawned enemy: {w}.");
     }
 }
 

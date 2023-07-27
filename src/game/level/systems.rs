@@ -29,7 +29,7 @@ pub fn level_complete_event(
     mut level_complete_event: EventWriter<LevelCompletedEvent>,
 ) {
     if keyboard_input.just_pressed(KeyCode::Delete) {
-        println!("Sending level info event. Level({})", level.0);
+        println!("Creating LevelCompletedEvent for Level({})", level.0);
         level_complete_event.send(LevelCompletedEvent);
         level.0 += 1;
     }
@@ -58,15 +58,13 @@ pub fn render_level_data(
     for _ in level_complete_event_reader.iter() {
         // clear out old map
         rendered_map_q.iter().for_each(|map| {
-            println!("Removing a map");
             commands.entity(map).despawn();
         });
 
         if let Some(level_info) = level_info_q.iter().nth(level.0) {
-            println!("rendering level data");
             let win = win_q.get_single().unwrap();
             let start_x = win.width() / 2.0;
-            let start_y = win.height() / 2.0;
+            let start_y = win.height() / 2.0 + 50.0;
             let map_data = parse_tiled_map(&level_info.map).unwrap_or_else(|_| TiledMap::default());
 
             let tile_size = Vec2::new(map_data.tilewidth as f32, map_data.tileheight as f32);
@@ -83,7 +81,6 @@ pub fn render_level_data(
                             start_y + (map_data.height - y - 1) as f32 * tile_size.y,
                             layer_count as f32,
                         );
-                        println!("Position: {position}");
                         let sprite_color = match data[idx] {
                             0 => Color::WHITE,  // Empty tile
                             1 => Color::GREEN,  // Tile with ID 1
