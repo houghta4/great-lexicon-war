@@ -39,7 +39,6 @@ pub fn init_level(mut level_complete_event: EventWriter<LevelCompletedEvent>) {
     level_complete_event.send(LevelCompletedEvent);
 }
 
-// TODO: create map stuff
 fn parse_tiled_map(map_path: &str) -> Result<TiledMap, Box<dyn std::error::Error>> {
     let map_json = std::fs::read_to_string(map_path)?;
     serde_json::from_str(&map_json).map_err(|err| Box::new(err) as Box<dyn std::error::Error>)
@@ -47,6 +46,7 @@ fn parse_tiled_map(map_path: &str) -> Result<TiledMap, Box<dyn std::error::Error
 
 pub fn render_level_data(
     mut commands: Commands,
+    // These will be needed once we have our sprite sheet
     // asset_server: Res<AssetServer>,
     // mut texture_atlases: ResMut<Assets<TextureAtlas>>,
     mut level_complete_event_reader: EventReader<LevelCompletedEvent>,
