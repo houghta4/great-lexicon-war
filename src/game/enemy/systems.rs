@@ -115,7 +115,7 @@ pub fn spawn_enemies(
             SpriteSheetBundle {
                 texture_atlas: texture_atlas_handle,
                 sprite: TextureAtlasSprite::new(0),
-                transform: transform,
+                transform,
                 ..default()
             },
             animation_indices,
