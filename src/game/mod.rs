@@ -3,16 +3,18 @@ use bevy::prelude::*;
 mod animations;
 mod camera;
 mod enemy;
+mod input;
+mod level;
 mod player;
 mod resources;
 mod systems;
-mod input;
 
 use animations::AnimationPlugin;
 use camera::CameraPlugin;
 use enemy::EnemyPlugin;
-use player::PlayerPlugin;
 use input::TextInputPlugin;
+use level::LevelPlugin;
+use player::PlayerPlugin;
 
 pub struct InGamePlugin;
 
@@ -20,8 +22,14 @@ impl Plugin for InGamePlugin {
     fn build(&self, app: &mut App) {
         app
             // Plugins
-            .add_plugins((PlayerPlugin, CameraPlugin, EnemyPlugin, TextInputPlugin, AnimationPlugin));
-
+            .add_plugins((
+                PlayerPlugin,
+                CameraPlugin,
+                EnemyPlugin,
+                TextInputPlugin,
+                AnimationPlugin,
+                LevelPlugin,
+            ));
     }
 }
 
