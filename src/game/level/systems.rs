@@ -44,11 +44,12 @@ fn parse_tiled_map(map_path: &str) -> Result<TiledMap, Box<dyn std::error::Error
     serde_json::from_str(&map_json).map_err(|err| Box::new(err) as Box<dyn std::error::Error>)
 }
 
+// 960x960 so 30 rows x 30 cols
 pub fn render_level_data(
     mut commands: Commands,
     // These will be needed once we have our sprite sheet
-    // asset_server: Res<AssetServer>,
-    // mut texture_atlases: ResMut<Assets<TextureAtlas>>,
+    asset_server: Res<AssetServer>,
+    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
     mut level_complete_event_reader: EventReader<LevelCompletedEvent>,
     level: Res<Level>,
     level_info_q: Query<&LevelInfo>,
@@ -68,7 +69,20 @@ pub fn render_level_data(
             let map_data = parse_tiled_map(&level_info.map).unwrap_or_else(|_| TiledMap::default());
 
             let tile_size = Vec2::new(map_data.tilewidth as f32, map_data.tileheight as f32);
-            let mut bundles: Vec<(SpriteBundle, RenderedTile)> = vec![];
+            let tile_scale = Vec3::new(tile_size.x / 32.0, tile_size.y / 32.0, 0.0);
+            let mut bundles: Vec<(SpriteSheetBundle, RenderedTile)> = vec![];
+
+            // Sprite sheet
+            let texture_handle: Handle<Image> =
+                asset_server.load("tilesets/hyptosis_tile-art-batch-1.png");
+            let texture_atlas =
+                TextureAtlas::from_grid(texture_handle, Vec2::new(32.0, 32.0), 30, 30, None, None);
+
+            let texture_atlas_handle = texture_atlases.add(texture_atlas);
+
+            // This offset is temporary in testing. I think the best way is to make the map.json contain the correct image (pretty tedious setup tho)
+            let sprite_sheet_offset = 26 * 30 + 12; // row 27 col 13
+
             // Loop over each layer
             for (layer_count, layer) in map_data.layers.iter().enumerate() {
                 let data = &layer.data;
@@ -81,21 +95,16 @@ pub fn render_level_data(
                             start_y + (map_data.height - y - 1) as f32 * tile_size.y,
                             layer_count as f32,
                         );
-                        let sprite_color = match data[idx] {
-                            0 => Color::WHITE,  // Empty tile
-                            1 => Color::GREEN,  // Tile with ID 1
-                            _ => Color::ORANGE, // Default color for unknown tiles
-                        };
 
-                        // will need to use atlas once we have a sprite sheet
                         let tile = (
-                            SpriteBundle {
-                                transform: Transform::from_translation(position),
-                                sprite: Sprite {
-                                    color: sprite_color,
-                                    custom_size: Some(tile_size),
-                                    ..default()
-                                },
+                            SpriteSheetBundle {
+                                texture_atlas: texture_atlas_handle.clone(),
+                                sprite: TextureAtlasSprite::new(
+                                    sprite_sheet_offset + data[idx] as usize,
+                                ),
+                                transform: Transform::from_translation(position)
+                                    .with_scale(tile_scale),
+
                                 ..default()
                             },
                             RenderedTile,
