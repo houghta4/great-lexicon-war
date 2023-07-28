@@ -12,7 +12,7 @@ use systems::*;
 fn main() {
     App::new()
         // Default plugins
-        .add_plugins(DefaultPlugins)
+        .add_plugins(DefaultPlugins.set(ImagePlugin::default_nearest()))
         //States
         .add_state::<AppState>()
         // Custom plugins
