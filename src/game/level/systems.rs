@@ -64,12 +64,16 @@ pub fn render_level_data(
 
         if let Some(level_info) = level_info_q.iter().nth(level.0) {
             let win = win_q.get_single().unwrap();
-            let start_x = win.width() / 2.0;
-            let start_y = win.height() / 2.0 + 50.0;
+
             let map_data = parse_tiled_map(&level_info.map).unwrap_or_else(|_| TiledMap::default());
 
+            // These are atrocious. Fix later when we use (0, 0)
+            let start_x = win.width() / 2.0 - ((map_data.tilewidth * map_data.width) as f32 / 2.0);
+            let start_y =
+                win.height() / 2.0 - ((map_data.tileheight * map_data.height) as f32 / 2.0);
+
             let tile_size = Vec2::new(map_data.tilewidth as f32, map_data.tileheight as f32);
-            let tile_scale = Vec3::new(tile_size.x / 32.0, tile_size.y / 32.0, 0.0);
+            let tile_scale = Vec3::new(tile_size.x / 32.0, tile_size.y / 32.0, 0.0); // tile sheet is 32x32
             let mut bundles: Vec<(SpriteSheetBundle, RenderedTile)> = vec![];
 
             // Sprite sheet
@@ -79,9 +83,6 @@ pub fn render_level_data(
                 TextureAtlas::from_grid(texture_handle, Vec2::new(32.0, 32.0), 30, 30, None, None);
 
             let texture_atlas_handle = texture_atlases.add(texture_atlas);
-
-            // This offset is temporary in testing. I think the best way is to make the map.json contain the correct image (pretty tedious setup tho)
-            let sprite_sheet_offset = 26 * 30 + 12; // row 27 col 13
 
             // Loop over each layer
             for (layer_count, layer) in map_data.layers.iter().enumerate() {
@@ -99,9 +100,7 @@ pub fn render_level_data(
                         let tile = (
                             SpriteSheetBundle {
                                 texture_atlas: texture_atlas_handle.clone(),
-                                sprite: TextureAtlasSprite::new(
-                                    sprite_sheet_offset + data[idx] as usize,
-                                ),
+                                sprite: TextureAtlasSprite::new(data[idx] as usize),
                                 transform: Transform::from_translation(position)
                                     .with_scale(tile_scale),
 
