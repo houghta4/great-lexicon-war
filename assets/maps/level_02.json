@@ -1,8 +1,8 @@
 {
     "width": 8,
     "height": 6,
-    "tilewidth": 128,
-    "tileheight": 128,
+    "tilewidth": 192,
+    "tileheight": 192,
     "layers": [
         {
             "name": "tiles",
