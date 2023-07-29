@@ -29,14 +29,14 @@ pub fn level_complete_event(
     mut level_complete_event: EventWriter<LevelCompletedEvent>,
 ) {
     if keyboard_input.just_pressed(KeyCode::Delete) {
-        println!("Creating LevelCompletedEvent for Level({})", level.0);
-        level_complete_event.send(LevelCompletedEvent);
         level.0 += 1;
+        println!("Creating LevelCompletedEvent for Level({})", level.0);
+        level_complete_event.send(LevelCompletedEvent(level.0));
     }
 }
 
 pub fn init_level(mut level_complete_event: EventWriter<LevelCompletedEvent>) {
-    level_complete_event.send(LevelCompletedEvent);
+    level_complete_event.send(LevelCompletedEvent(0));
 }
 
 fn parse_tiled_map(map_path: &str) -> Result<TiledMap, Box<dyn std::error::Error>> {
@@ -44,19 +44,16 @@ fn parse_tiled_map(map_path: &str) -> Result<TiledMap, Box<dyn std::error::Error
     serde_json::from_str(&map_json).map_err(|err| Box::new(err) as Box<dyn std::error::Error>)
 }
 
-// 960x960 so 30 rows x 30 cols
 pub fn render_level_data(
     mut commands: Commands,
-    // These will be needed once we have our sprite sheet
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
     mut level_complete_event_reader: EventReader<LevelCompletedEvent>,
-    level: Res<Level>,
     level_info_q: Query<&LevelInfo>,
     rendered_map_q: Query<Entity, With<RenderedTile>>,
     win_q: Query<&Window, With<PrimaryWindow>>,
 ) {
-    for _ in level_complete_event_reader.iter() {
+    for level in level_complete_event_reader.iter() {
         // clear out old map
         rendered_map_q.iter().for_each(|map| {
             commands.entity(map).despawn();
@@ -64,7 +61,6 @@ pub fn render_level_data(
 
         if let Some(level_info) = level_info_q.iter().nth(level.0) {
             let win = win_q.get_single().unwrap();
-
             let map_data = parse_tiled_map(&level_info.map).unwrap_or_else(|_| TiledMap::default());
 
             // These are atrocious. Fix later when we use (0, 0)
@@ -72,8 +68,9 @@ pub fn render_level_data(
             let start_y =
                 win.height() / 2.0 - ((map_data.tileheight * map_data.height) as f32 / 2.0);
 
+            // 960x960 with 32x32 tiles. 30 rows, 30 cols
             let tile_size = Vec2::new(map_data.tilewidth as f32, map_data.tileheight as f32);
-            let tile_scale = Vec3::new(tile_size.x / 32.0, tile_size.y / 32.0, 0.0); // tile sheet is 32x32
+            let tile_scale = Vec3::new(tile_size.x / 32.0, tile_size.y / 32.0, 0.0);
             let mut bundles: Vec<(SpriteSheetBundle, RenderedTile)> = vec![];
 
             // Sprite sheet
