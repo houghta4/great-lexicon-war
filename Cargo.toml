@@ -12,5 +12,6 @@ opt-level = 1
 opt-level = 3
 
 # remove dynamic_linking feature for release build
+#, features = ["dynamic_linking"] 
 [dependencies]
-bevy = { version = "0.11.0", features = ["dynamic_linking"] }
+bevy = { version = "0.11.0"}
