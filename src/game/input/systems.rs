@@ -65,10 +65,8 @@ pub fn listen_keyboard_input_events(
         }
     }
 
-    if input.pressed(KeyCode::Back) {
-        if timer.0.tick(time.delta()).just_finished() {
-            edit_text.single_mut().sections[0].value.pop();
-        }
+    if input.pressed(KeyCode::Back) && timer.0.tick(time.delta()).just_finished() {
+        edit_text.single_mut().sections[0].value.pop();
     }
 }
 
