@@ -9,6 +9,7 @@ mod player;
 mod resources;
 mod systems;
 mod word_match;
+mod utils;
 
 use animations::AnimationPlugin;
 use camera::CameraPlugin;
