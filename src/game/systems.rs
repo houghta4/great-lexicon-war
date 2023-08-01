@@ -20,31 +20,25 @@ pub fn insert_word_bank(mut commands: Commands) {
     let reader = BufReader::new(
         File::open("assets/words/easy.txt").expect("Error reading easy words from file"),
     );
-    // assuming one word per line
-    for line in reader.lines() {
-        if let Ok(word) = line {
-            word_bank.easy.push(word);
-        }
+    // assuming one word per line,
+    for word in reader.lines().flatten() {
+        word_bank.easy.push(word);
     }
     word_bank.easy.shuffle(&mut rng);
 
     let reader = BufReader::new(
         File::open("assets/words/medium.txt").expect("Error reading medium words from file"),
     );
-    for line in reader.lines() {
-        if let Ok(word) = line {
-            word_bank.med.push(word);
-        }
+    for word in reader.lines().flatten() {
+        word_bank.med.push(word);
     }
     word_bank.med.shuffle(&mut rng);
 
     let reader = BufReader::new(
         File::open("assets/words/hard.txt").expect("Error reading hard words from file"),
     );
-    for line in reader.lines() {
-        if let Ok(word) = line {
-            word_bank.hard.push(word);
-        }
+    for word in reader.lines().flatten() {
+        word_bank.hard.push(word);
     }
     word_bank.hard.shuffle(&mut rng);
 

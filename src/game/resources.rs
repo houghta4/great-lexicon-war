@@ -3,7 +3,9 @@ use rand::{seq::SliceRandom, thread_rng};
 
 use super::WordComplexity;
 
-// Must alwways use as ResMut<WordBank>
+/// Collection of words to choose from at "random"
+///
+/// * Must always use as ResMut<WordBank> due to modification for word uniqueness
 #[derive(Resource)]
 pub struct WordBank {
     pub easy: Vec<String>,
@@ -27,14 +29,8 @@ impl RandomWord for WordBank {
     }
 }
 
-trait RandomWordHelper {
-    fn get_easy_word(&mut self) -> String;
-    fn get_med_word(&mut self) -> String;
-    fn get_hard_word(&mut self) -> String;
-}
-
 // Vecs will be shuffled on creation
-impl RandomWordHelper for WordBank {
+impl WordBank {
     fn get_easy_word(&mut self) -> String {
         if self.easy_ptr >= self.easy.len() {
             let mut rng = thread_rng();
