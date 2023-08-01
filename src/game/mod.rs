@@ -18,11 +18,17 @@ use level::LevelPlugin;
 use player::PlayerPlugin;
 use word_match::WordMatchPlugin;
 
+use crate::AppState;
+
+use self::systems::*;
+
 pub struct InGamePlugin;
 
 impl Plugin for InGamePlugin {
     fn build(&self, app: &mut App) {
         app
+            // Resource inserted on app Startup
+            .add_systems(Startup, insert_word_bank)
             // Plugins
             .add_plugins((
                 PlayerPlugin,
@@ -32,7 +38,9 @@ impl Plugin for InGamePlugin {
                 AnimationPlugin,
                 LevelPlugin,
                 WordMatchPlugin
-            ));
+            ))            
+            // Used to display words in console, remove later
+            .add_systems(Update, test_words.run_if(in_state(AppState::InGame)));
     }
 }
 
