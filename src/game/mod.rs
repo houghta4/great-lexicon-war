@@ -37,8 +37,8 @@ impl Plugin for InGamePlugin {
                 TextInputPlugin,
                 AnimationPlugin,
                 LevelPlugin,
-                WordMatchPlugin
-            ))            
+                WordMatchPlugin,
+            ))
             // Used to display words in console, remove later
             .add_systems(Update, test_words.run_if(in_state(AppState::InGame)));
     }
@@ -50,4 +50,10 @@ struct SpriteSheetInfo<'a> {
     y: f32,        // height of sprite sheet
     cols: usize,   // how many sprites per row
     rows: usize,   // how many rows of sprites
+}
+
+pub enum WordComplexity {
+    Easy,
+    Medium,
+    Hard,
 }

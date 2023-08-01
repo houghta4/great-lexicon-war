@@ -6,8 +6,10 @@ use std::{
     io::{BufRead, BufReader},
 };
 
-use super::resources::WordBank;
-use crate::game::resources::RandomWord;
+use super::{
+    resources::{RandomWord, WordBank},
+    WordComplexity,
+};
 
 pub fn insert_word_bank(mut commands: Commands) {
     // 100 words per category for now
@@ -51,8 +53,8 @@ pub fn insert_word_bank(mut commands: Commands) {
 
 pub fn test_words(keyboard_input: Res<Input<KeyCode>>, mut words: ResMut<WordBank>) {
     if keyboard_input.just_pressed(KeyCode::F1) {
-        println!("easy: {}", words.get_easy_word());
-        println!("med: {}", words.get_med_word());
-        println!("hard: {}", words.get_hard_word());
+        println!("easy: {}", words.get_word(WordComplexity::Easy));
+        println!("med: {}", words.get_word(WordComplexity::Medium));
+        println!("hard: {}", words.get_word(WordComplexity::Hard));
     }
 }

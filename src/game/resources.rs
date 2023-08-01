@@ -1,6 +1,8 @@
 use bevy::prelude::*;
 use rand::{seq::SliceRandom, thread_rng};
 
+use super::WordComplexity;
+
 // Must alwways use as ResMut<WordBank>
 #[derive(Resource)]
 pub struct WordBank {
@@ -11,15 +13,28 @@ pub struct WordBank {
     pub hard: Vec<String>,
     hard_ptr: usize,
 }
-
 pub trait RandomWord {
+    fn get_word(&mut self, complexity: WordComplexity) -> String;
+}
+
+impl RandomWord for WordBank {
+    fn get_word(&mut self, complexity: WordComplexity) -> String {
+        match complexity {
+            WordComplexity::Easy => self.get_easy_word(),
+            WordComplexity::Medium => self.get_med_word(),
+            WordComplexity::Hard => self.get_hard_word(),
+        }
+    }
+}
+
+trait RandomWordHelper {
     fn get_easy_word(&mut self) -> String;
     fn get_med_word(&mut self) -> String;
     fn get_hard_word(&mut self) -> String;
 }
 
 // Vecs will be shuffled on creation
-impl RandomWord for WordBank {
+impl RandomWordHelper for WordBank {
     fn get_easy_word(&mut self) -> String {
         if self.easy_ptr >= self.easy.len() {
             let mut rng = thread_rng();
