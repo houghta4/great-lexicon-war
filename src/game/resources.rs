@@ -5,7 +5,7 @@ use super::WordComplexity;
 
 /// Collection of words to choose from at "random"
 ///
-/// * Must always use as ResMut<WordBank> due to modification for word uniqueness
+/// * Must always use as `ResMut<WordBank>` due to modification for word uniqueness
 #[derive(Resource)]
 pub struct WordBank {
     pub easy: Vec<String>,
