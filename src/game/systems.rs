@@ -7,7 +7,9 @@ use std::{
 };
 
 use super::{
+    input::components::InputText,
     resources::{RandomWord, WordBank},
+    word_match::components::Word,
     WordComplexity,
 };
 
@@ -53,11 +55,18 @@ pub fn insert_word_bank(mut commands: Commands) {
     commands.insert_resource(word_bank);
 }
 
-pub fn test_words(keyboard_input: Res<Input<KeyCode>>, mut words: ResMut<WordBank>) {
+pub fn test_words(
+    keyboard_input: Res<Input<KeyCode>>,
+    mut words: ResMut<WordBank>,
+    word_q: Query<&Word, (With<Word>, Without<InputText>)>,
+) {
     if keyboard_input.just_pressed(KeyCode::F1) {
-        println!("easy: {}", words.get_word(WordComplexity::Easy));
-        println!("med: {}", words.get_word(WordComplexity::Medium));
-        println!("hard: {}", words.get_word(WordComplexity::Hard));
-        println!("extreme: {}", words.get_word(WordComplexity::Extreme));
+        println!("easy: {}", words.get_word(WordComplexity::Easy, &word_q));
+        println!("med: {}", words.get_word(WordComplexity::Medium, &word_q));
+        println!("hard: {}", words.get_word(WordComplexity::Hard, &word_q));
+        println!(
+            "extreme: {}",
+            words.get_word(WordComplexity::Extreme, &word_q)
+        );
     }
 }

@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use rand::{seq::SliceRandom, thread_rng};
 
-use super::WordComplexity;
+use super::{input::components::InputText, word_match::components::Word, WordComplexity};
 
 /// Collection of words to choose from at "random"
 ///
@@ -17,18 +17,38 @@ pub struct WordBank {
     pub extreme: Vec<String>,
     extreme_ptr: usize,
 }
+
 pub trait RandomWord {
-    fn get_word(&mut self, complexity: WordComplexity) -> String;
+    fn get_word(
+        &mut self,
+        complexity: WordComplexity,
+        word_query: &Query<&Word, (With<Word>, Without<InputText>)>,
+    ) -> String;
 }
 
 impl RandomWord for WordBank {
-    fn get_word(&mut self, complexity: WordComplexity) -> String {
-        match complexity {
+    fn get_word(
+        &mut self,
+        complexity: WordComplexity,
+        word_q: &Query<&Word, (With<Word>, Without<InputText>)>,
+    ) -> String {
+        let mut random_word = match complexity {
             WordComplexity::Easy => self.get_easy_word(),
             WordComplexity::Medium => self.get_med_word(),
             WordComplexity::Hard => self.get_hard_word(),
             WordComplexity::Extreme => self.get_extreme_word(),
+        };
+        let mut dup = word_q.iter().any(|word| word.1 == random_word);
+        while dup {
+            random_word = match complexity {
+                WordComplexity::Easy => self.get_easy_word(),
+                WordComplexity::Medium => self.get_med_word(),
+                WordComplexity::Hard => self.get_hard_word(),
+                WordComplexity::Extreme => self.get_extreme_word(),
+            };
+            dup = word_q.iter().any(|word| word.1 == random_word);
         }
+        random_word
     }
 }
 

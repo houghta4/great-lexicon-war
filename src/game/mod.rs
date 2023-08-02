@@ -20,7 +20,7 @@ use word_match::WordMatchPlugin;
 
 use crate::AppState;
 
-use self::systems::*;
+use systems::*;
 
 pub struct InGamePlugin;
 
