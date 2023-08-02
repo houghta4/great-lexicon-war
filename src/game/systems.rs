@@ -13,6 +13,7 @@ use super::{
 
 pub fn insert_word_bank(mut commands: Commands) {
     // 100 words per category for now
+    println!("inserting word bank");
     let mut word_bank = WordBank::default();
     let mut rng = thread_rng();
 
@@ -42,6 +43,14 @@ pub fn insert_word_bank(mut commands: Commands) {
     }
     word_bank.hard.shuffle(&mut rng);
 
+    let reader = BufReader::new(
+        File::open("assets/words/extreme.txt").expect("Error reading extreme words from file"),
+    );
+    for word in reader.lines().flatten() {
+        word_bank.extreme.push(word);
+    }
+    word_bank.extreme.shuffle(&mut rng);
+
     commands.insert_resource(word_bank);
 }
 
@@ -50,5 +59,6 @@ pub fn test_words(keyboard_input: Res<Input<KeyCode>>, mut words: ResMut<WordBan
         println!("easy: {}", words.get_word(WordComplexity::Easy));
         println!("med: {}", words.get_word(WordComplexity::Medium));
         println!("hard: {}", words.get_word(WordComplexity::Hard));
+        println!("extreme: {}", words.get_word(WordComplexity::Extreme));
     }
 }

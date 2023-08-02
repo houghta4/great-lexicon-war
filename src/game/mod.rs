@@ -56,4 +56,5 @@ pub enum WordComplexity {
     Easy,
     Medium,
     Hard,
+    Extreme,
 }

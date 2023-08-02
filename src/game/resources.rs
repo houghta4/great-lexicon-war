@@ -14,6 +14,8 @@ pub struct WordBank {
     med_ptr: usize,
     pub hard: Vec<String>,
     hard_ptr: usize,
+    pub extreme: Vec<String>,
+    extreme_ptr: usize,
 }
 pub trait RandomWord {
     fn get_word(&mut self, complexity: WordComplexity) -> String;
@@ -25,6 +27,7 @@ impl RandomWord for WordBank {
             WordComplexity::Easy => self.get_easy_word(),
             WordComplexity::Medium => self.get_med_word(),
             WordComplexity::Hard => self.get_hard_word(),
+            WordComplexity::Extreme => self.get_extreme_word(),
         }
     }
 }
@@ -61,6 +64,16 @@ impl WordBank {
         self.hard_ptr += 1;
         word
     }
+    fn get_extreme_word(&mut self) -> String {
+        if self.extreme_ptr >= self.extreme.len() {
+            let mut rng = thread_rng();
+            self.extreme.shuffle(&mut rng);
+            self.extreme_ptr = 0;
+        }
+        let word = self.extreme[self.extreme_ptr].clone();
+        self.extreme_ptr += 1;
+        word
+    }
 }
 
 impl Default for WordBank {
@@ -72,6 +85,8 @@ impl Default for WordBank {
             med_ptr: 0,
             hard: Vec::with_capacity(100),
             hard_ptr: 0,
+            extreme: Vec::with_capacity(10),
+            extreme_ptr: 0,
         }
     }
 }
