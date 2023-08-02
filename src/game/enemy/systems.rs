@@ -3,6 +3,7 @@ use bevy::{prelude::*, window::PrimaryWindow};
 use crate::components::{AnimationIndices, AnimationTimer};
 use crate::game::animations::components::AnimateSprite;
 use crate::game::enemy::components::*;
+use crate::game::word_match::components::Word;
 use crate::game::SpriteSheetInfo;
 
 // https://github.com/bevyengine/bevy/blob/main/examples/2d/sprite_sheet.rs
@@ -128,6 +129,7 @@ pub fn spawn_enemies(
                 },
                 ..default()
             },
+            Word(w.len(), w.to_string()), // for testing word uniqueness
         ));
         println!("Spawned enemy: {w}.");
     }

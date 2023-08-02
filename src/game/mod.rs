@@ -18,11 +18,17 @@ use level::LevelPlugin;
 use player::PlayerPlugin;
 use word_match::WordMatchPlugin;
 
+use crate::AppState;
+
+use systems::*;
+
 pub struct InGamePlugin;
 
 impl Plugin for InGamePlugin {
     fn build(&self, app: &mut App) {
         app
+            // Resource inserted on app Startup
+            .add_systems(Startup, insert_word_bank)
             // Plugins
             .add_plugins((
                 PlayerPlugin,
@@ -31,8 +37,10 @@ impl Plugin for InGamePlugin {
                 TextInputPlugin,
                 AnimationPlugin,
                 LevelPlugin,
-                WordMatchPlugin
-            ));
+                WordMatchPlugin,
+            ))
+            // Used to display words in console, remove later
+            .add_systems(Update, test_words.run_if(in_state(AppState::InGame)));
     }
 }
 
@@ -42,4 +50,11 @@ struct SpriteSheetInfo<'a> {
     y: f32,        // height of sprite sheet
     cols: usize,   // how many sprites per row
     rows: usize,   // how many rows of sprites
+}
+
+pub enum WordComplexity {
+    Easy,
+    Medium,
+    Hard,
+    Extreme,
 }
