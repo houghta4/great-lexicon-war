@@ -13,7 +13,6 @@ use super::{
 
 pub fn insert_word_bank(mut commands: Commands) {
     // 100 words per category for now
-    println!("inserting word bank");
     let mut word_bank = WordBank::default();
     let mut rng = thread_rng();
 
