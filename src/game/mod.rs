@@ -8,6 +8,7 @@ mod level;
 mod player;
 mod resources;
 mod systems;
+mod ui;
 mod word_match;
 
 use animations::AnimationPlugin;
@@ -22,6 +23,8 @@ use crate::AppState;
 
 use systems::*;
 
+use self::ui::GameUIPlugin;
+
 pub struct InGamePlugin;
 
 impl Plugin for InGamePlugin {
@@ -29,6 +32,10 @@ impl Plugin for InGamePlugin {
         app
             // Resource inserted on app Startup
             .add_systems(Startup, insert_word_bank)
+            // States
+            .add_state::<InGameState>()
+            // On enter state
+            .add_systems(OnEnter(AppState::InGame), pause_game) // start paused for now
             // Plugins
             .add_plugins((
                 PlayerPlugin,
@@ -38,10 +45,22 @@ impl Plugin for InGamePlugin {
                 AnimationPlugin,
                 LevelPlugin,
                 WordMatchPlugin,
+                GameUIPlugin,
             ))
-            // Used to display words in console, remove later
-            .add_systems(Update, test_words.run_if(in_state(AppState::InGame)));
+            .add_systems(
+                Update,
+                (test_words, toggle_game_state, monitor_state).run_if(in_state(AppState::InGame)),
+            )
+            // This may not be needed
+            .add_systems(OnExit(AppState::InGame), resume_game);
     }
+}
+
+#[derive(States, Debug, Clone, Copy, Eq, PartialEq, Hash, Default)]
+pub enum InGameState {
+    #[default]
+    Running,
+    Paused,
 }
 
 struct SpriteSheetInfo<'a> {
