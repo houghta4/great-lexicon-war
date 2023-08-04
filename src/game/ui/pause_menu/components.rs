@@ -7,7 +7,4 @@ pub struct PauseMenu;
 pub struct ResumeButton;
 
 #[derive(Component)]
-pub struct MainMenuButton;
-
-#[derive(Component)]
 pub struct QuitButton;

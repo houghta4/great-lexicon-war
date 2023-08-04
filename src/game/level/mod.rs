@@ -28,6 +28,8 @@ impl Plugin for LevelPlugin {
             .add_systems(
                 Update,
                 (level_complete_event, render_level_data).run_if(in_state(AppState::InGame)),
-            );
+            )
+            // On exit systems
+            .add_systems(OnExit(AppState::InGame), clear_map);
     }
 }

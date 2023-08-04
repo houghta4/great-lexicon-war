@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use crate::game::InGameState;
 use systems::layout::*;
 
-use self::systems::interactions::interact_with_resume_button;
+use self::systems::interactions::{interact_with_quit_button, interact_with_resume_button};
 
 mod components;
 mod styles;
@@ -19,7 +19,8 @@ impl Plugin for PauseMenuPlugin {
             // Systems
             .add_systems(
                 Update,
-                interact_with_resume_button.run_if(in_state(InGameState::Paused)),
+                (interact_with_resume_button, interact_with_quit_button)
+                    .distributive_run_if(in_state(InGameState::Paused)),
             )
             // OnExit Systems
             .add_systems(OnExit(InGameState::Paused), despawn_pause_menu);

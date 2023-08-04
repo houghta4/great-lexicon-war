@@ -41,10 +41,10 @@ pub fn get_title_text_style(asset_server: &Res<AssetServer>) -> TextStyle {
     }
 }
 
-pub fn get_button_style() -> Style {
+pub fn get_button_style(width: f32, height: f32) -> Style {
     Style {
-        width: Val::Px(200.0),
-        height: Val::Px(80.0),
+        width: Val::Px(width),
+        height: Val::Px(height),
         justify_content: JustifyContent::Center,
         align_items: AlignItems::Center,
         ..default()

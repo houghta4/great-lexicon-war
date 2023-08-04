@@ -2,9 +2,9 @@ use bevy::prelude::*;
 
 use crate::game::ui::pause_menu::{components::*, styles::*};
 
-pub fn spawn_pause_menu(mut commands: Commands, asset_server: Res<AssetServer>) {
-    build_pause_menu(&mut commands, &asset_server);
-}
+// pub fn spawn_pause_menu(mut commands: Commands, asset_server: Res<AssetServer>) {
+//     build_pause_menu(&mut commands, &asset_server);
+// }
 
 pub fn despawn_pause_menu(mut commands: Commands, pause_menu_q: Query<Entity, With<PauseMenu>>) {
     if let Ok(pause_menu_entity) = pause_menu_q.get_single() {
@@ -12,8 +12,8 @@ pub fn despawn_pause_menu(mut commands: Commands, pause_menu_q: Query<Entity, Wi
     }
 }
 
-pub fn build_pause_menu(commands: &mut Commands, asset_server: &Res<AssetServer>) -> Entity {
-    let pause_menu_entity = commands
+pub fn spawn_pause_menu(mut commands: Commands, asset_server: Res<AssetServer>) {
+    commands
         .spawn((
             // this is transparent, takes up whole screen
             NodeBundle {
@@ -49,7 +49,7 @@ pub fn build_pause_menu(commands: &mut Commands, asset_server: &Res<AssetServer>
                     parent
                         .spawn((
                             ButtonBundle {
-                                style: get_button_style(),
+                                style: get_button_style(200., 80.),
                                 background_color: NORMAL_BUTTON.into(),
                                 ..default()
                             },
@@ -68,9 +68,30 @@ pub fn build_pause_menu(commands: &mut Commands, asset_server: &Res<AssetServer>
                                 ..default()
                             });
                         });
-                });
-        })
-        .id();
 
-    pause_menu_entity
+                    // Quit button
+                    parent
+                        .spawn((
+                            ButtonBundle {
+                                style: get_button_style(160., 64.),
+                                background_color: NORMAL_BUTTON.into(),
+                                ..default()
+                            },
+                            QuitButton,
+                        ))
+                        .with_children(|parent| {
+                            parent.spawn(TextBundle {
+                                text: Text {
+                                    sections: vec![TextSection::new(
+                                        "Quit",
+                                        get_button_text_style(&asset_server),
+                                    )],
+                                    alignment: TextAlignment::Center,
+                                    ..default()
+                                },
+                                ..default()
+                            });
+                        });
+                });
+        });
 }
