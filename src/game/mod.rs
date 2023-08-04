@@ -10,6 +10,7 @@ mod resources;
 mod systems;
 mod ui;
 mod word_match;
+mod utils;
 
 use animations::AnimationPlugin;
 use camera::CameraPlugin;

@@ -1,7 +1,13 @@
-use bevy::prelude::{Component, Event};
+use bevy::prelude::Component;
+
+#[allow(dead_code)] //TODO: remove
+#[derive(PartialEq)]
+pub enum WordTarget {
+    Reload,
+    Heal,
+    Enemy(usize),
+    Move(usize)
+}
 
 #[derive(Component)]
-pub struct Word(pub usize, pub String);
-
-#[derive(Event)]
-pub struct WordEvent(pub usize);
+pub struct Word(pub WordTarget, pub String);
