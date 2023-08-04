@@ -24,7 +24,7 @@ pub fn setup_text_input(
                 ..default()
             }
         ),
-        transform: Transform::from_xyz(win.width() / 2.0, win.height() / 2.0, 0.0),
+        transform: Transform::from_xyz(win.width() / 2.0, win.height() / 2.0, 1.0),
         ..default()
     }, InputText));
 }
