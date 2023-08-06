@@ -1,32 +1,31 @@
+use crate::game::input::components::InputText;
+use crate::game::input::resource::BackspaceTimer;
 use bevy::input::keyboard::KeyboardInput;
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
-use crate::game::input::components::InputText;
-use crate::game::input::resource::BackspaceTimer;
-
 
 /**
     Setup for the text input. Spawns a text field for input display
 **/
-pub fn setup_text_input(
-    mut commands: Commands,
-    win_q: Query<&Window, With<PrimaryWindow>>) {
-
+pub fn setup_text_input(mut commands: Commands, win_q: Query<&Window, With<PrimaryWindow>>) {
     // normally can't just unwrap, but this is guaranteed to exist from Bevy
     let win = win_q.get_single().unwrap();
 
-    commands.spawn((Text2dBundle {
-        text: Text::from_section(
-            "Type here".to_string(),
-            TextStyle {
-                font_size: 20.0,
-                color: Color::WHITE,
-                ..default()
-            }
-        ),
-        transform: Transform::from_xyz(win.width() / 2.0, win.height() / 2.0, 1.0),
-        ..default()
-    }, InputText));
+    commands.spawn((
+        Text2dBundle {
+            text: Text::from_section(
+                "".to_string(), // start empty
+                TextStyle {
+                    font_size: 20.0,
+                    color: Color::WHITE,
+                    ..default()
+                },
+            ),
+            transform: Transform::from_xyz(win.width() / 2.0, win.height() / 2.0, 999.0),
+            ..default()
+        },
+        InputText,
+    ));
 }
 
 /**
@@ -34,7 +33,7 @@ pub fn setup_text_input(
 **/
 pub fn listen_received_character_events(
     mut events: EventReader<ReceivedCharacter>,
-    mut edit_text: Query<&mut Text, With<InputText>>
+    mut edit_text: Query<&mut Text, With<InputText>>,
 ) {
     for event in events.iter() {
         if (event.char >= 'a' && event.char <= 'z') || (event.char >= 'A' && event.char <= 'Z') {
@@ -53,9 +52,8 @@ pub fn listen_keyboard_input_events(
     mut edit_text: Query<&mut Text, With<InputText>>,
     input: Res<Input<KeyCode>>,
     time: Res<Time>,
-    mut timer: ResMut<BackspaceTimer>
+    mut timer: ResMut<BackspaceTimer>,
 ) {
-
     for event in events.iter() {
         match event.key_code {
             Some(KeyCode::Return) => {
@@ -69,4 +67,3 @@ pub fn listen_keyboard_input_events(
         edit_text.single_mut().sections[0].value.pop();
     }
 }
-

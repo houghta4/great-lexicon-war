@@ -10,15 +10,15 @@ pub fn setup_levels(mut commands: Commands) {
     // Lv 1
     commands.spawn(LevelInfo {
         map: "assets/maps/level_01.json".to_string(),
-        enemy_count: 10,
-        spawn_rate: 10.0,
+        enemy_count: 5,
+        spawn_rate: 3.0,
     });
 
     // Lv 2
     commands.spawn(LevelInfo {
         map: "assets/maps/level_02.json".to_string(),
         enemy_count: 10,
-        spawn_rate: 10.0,
+        spawn_rate: 5.0,
     });
 }
 
