@@ -10,7 +10,7 @@ use super::{
     input::components::InputText,
     resources::{RandomWord, WordBank},
     word_match::components::Word,
-    WordComplexity,
+    InGameState, WordComplexity,
 };
 
 pub fn insert_word_bank(mut commands: Commands) {
@@ -68,5 +68,37 @@ pub fn test_words(
             "extreme: {}",
             words.get_word(WordComplexity::Extreme, &word_q)
         );
+    }
+}
+
+pub fn pause_game(mut next_game_state: ResMut<NextState<InGameState>>) {
+    next_game_state.set(InGameState::Paused);
+}
+
+// may want this on exit? might be useless with toggle
+pub fn resume_game(mut next_game_state: ResMut<NextState<InGameState>>) {
+    next_game_state.set(InGameState::Running);
+}
+
+pub fn toggle_game_state(
+    keyboard_input: Res<Input<KeyCode>>,
+    game_state: Res<State<InGameState>>,
+    mut next_game_state: ResMut<NextState<InGameState>>,
+) {
+    if keyboard_input.just_pressed(KeyCode::Escape) {
+        match game_state.get() {
+            InGameState::Running => {
+                next_game_state.set(InGameState::Paused);
+            }
+            InGameState::Paused => {
+                next_game_state.set(InGameState::Running);
+            }
+        }
+    }
+}
+
+pub fn monitor_state(game_state: Res<State<InGameState>>) {
+    if game_state.is_changed() {
+        println!("State -->> {:?}", game_state.get());
     }
 }
