@@ -5,6 +5,7 @@ use crate::components::{AnimationIndices, AnimationTimer};
 use crate::game::animations::components::AnimateSprite;
 use crate::game::enemy::components::*;
 use crate::game::enemy::events::EnemyShotEvent;
+use crate::game::enemy::resources::EnemySpawns;
 use crate::game::input::components::InputText;
 use crate::game::level::components::LevelInfo;
 use crate::game::level::events::LevelCompletedEvent;
@@ -13,7 +14,7 @@ use crate::game::utils::spawn_word;
 use crate::game::word_match::components::{Word, WordTarget};
 use crate::game::{SpriteSheetInfo, WordComplexity};
 
-use super::resources::{EnemySpawnCount, EnemySpawnTimer};
+use super::resources::{EnemySpawnTimer, PlayerHandles};
 
 // https://github.com/bevyengine/bevy/blob/main/examples/2d/sprite_sheet.rs
 
@@ -25,6 +26,8 @@ const SOLDIER_01_IDLE: SpriteSheetInfo = SpriteSheetInfo {
     cols: 7,
     rows: 1,
 };
+
+#[allow(dead_code)]
 const SOLDIER_01_RUN: SpriteSheetInfo = SpriteSheetInfo {
     path: "sprites/soldier_01/Run.png",
     x: 128.0,
@@ -32,6 +35,43 @@ const SOLDIER_01_RUN: SpriteSheetInfo = SpriteSheetInfo {
     cols: 7,
     rows: 1,
 };
+
+pub fn init_texture_atlas_handles(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
+) {
+    let cur_sprite = SOLDIER_01_IDLE;
+
+    let texture_handle = asset_server.load(cur_sprite.path);
+    let texture_atlas = TextureAtlas::from_grid(
+        texture_handle,
+        Vec2::new(cur_sprite.x, cur_sprite.y),
+        cur_sprite.cols,
+        cur_sprite.rows,
+        None,
+        None,
+    );
+    let texture_atlas_idle_handle = texture_atlases.add(texture_atlas);
+
+    let cur_sprite = SOLDIER_01_RUN;
+
+    let texture_handle = asset_server.load(cur_sprite.path);
+    let texture_atlas = TextureAtlas::from_grid(
+        texture_handle,
+        Vec2::new(cur_sprite.x, cur_sprite.y),
+        cur_sprite.cols,
+        cur_sprite.rows,
+        None,
+        None,
+    );
+    let texture_atlas_run_handle = texture_atlases.add(texture_atlas);
+
+    commands.insert_resource(PlayerHandles {
+        idle: texture_atlas_idle_handle,
+        run: texture_atlas_run_handle,
+    });
+}
 
 /**
     Spawn health bar for enemy
@@ -59,51 +99,40 @@ pub fn despawn_enemies(mut commands: Commands, enemy_q: Query<Entity, With<Enemy
     });
 }
 
-// TODO: How to deal with initial position?
 pub fn spawn_initial_enemies(
     mut commands: Commands,
     win_q: Query<&Window, With<PrimaryWindow>>,
     asset_server: Res<AssetServer>,
-    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
+    // mut texture_atlases: ResMut<Assets<TextureAtlas>>,
     mut word_bank: ResMut<WordBank>,
     word_q: Query<&Word, (With<Word>, Without<InputText>)>,
-    enemy_spawn: Res<EnemySpawnCount>,
+    enemy_spawn: Res<EnemySpawns>,
+    player_handles: Res<PlayerHandles>,
 ) {
-    println!("Spawning initial enemies: {}", enemy_spawn.enemy_count);
-    let win = win_q.get_single().unwrap();
+    println!("Spawning initial enemies");
+    let _win = win_q.get_single().unwrap();
     let font = asset_server.load("fonts/fyodor/truetype/Fyodor-BoldCondensed.ttf");
-    for i in 0..enemy_spawn.enemy_count {
-        let cur_sprite = SOLDIER_01_RUN;
+    for pos in enemy_spawn.enemies.as_slice() {
+        // let cur_sprite = SOLDIER_01_IDLE;
 
-        let texture_handle = asset_server.load(cur_sprite.path);
-        let texture_atlas = TextureAtlas::from_grid(
-            texture_handle,
-            Vec2::new(cur_sprite.x, cur_sprite.y),
-            cur_sprite.cols,
-            cur_sprite.rows,
-            None,
-            None,
-        );
-        let texture_atlas_handle = texture_atlases.add(texture_atlas);
+        // let texture_handle = asset_server.load(cur_sprite.path);
+        // let texture_atlas = TextureAtlas::from_grid(
+        //     texture_handle,
+        //     Vec2::new(cur_sprite.x, cur_sprite.y),
+        //     cur_sprite.cols,
+        //     cur_sprite.rows,
+        //     None,
+        //     None,
+        // );
+        // let texture_atlas_handle = texture_atlases.add(texture_atlas);
         let animation_indices = AnimationIndices { first: 0, last: 6 };
-        let x_offset = i * 130;
-        let rotate = if i % 2 == 0 { true } else { false };
-        let transform = Transform::from_xyz(
-            win.width() / 4.0 + (x_offset as f32),
-            win.height() / 2.0 - 130.0,
-            1.0,
-        );
 
         commands
             .spawn((
                 SpriteSheetBundle {
-                    texture_atlas: texture_atlas_handle,
-                    sprite: TextureAtlasSprite {
-                        index: 0,
-                        flip_x: rotate,
-                        ..default()
-                    },
-                    transform,
+                    texture_atlas: player_handles.idle.clone(),
+                    sprite: TextureAtlasSprite::new(0),
+                    transform: Transform::from_xyz(pos.x, pos.y, 1.),
                     ..default()
                 },
                 animation_indices,
@@ -134,8 +163,8 @@ pub fn init_enemy_level_info(
             commands.insert_resource(EnemySpawnTimer {
                 timer: Timer::from_seconds(level_info.spawn_rate, TimerMode::Repeating),
             });
-            commands.insert_resource(EnemySpawnCount {
-                enemy_count: level_info.enemy_count,
+            commands.insert_resource(EnemySpawns {
+                enemies: level_info.enemies.clone(),
             });
         }
     }
@@ -163,7 +192,7 @@ pub fn spawn_enemies_gradually(
         let random_x = random::<f32>() * win.width();
         let random_y = random::<f32>() * win.height();
 
-        let cur_sprite = SOLDIER_01_RUN;
+        let cur_sprite = SOLDIER_01_IDLE;
 
         let texture_handle = asset_server.load(cur_sprite.path);
         let texture_atlas = TextureAtlas::from_grid(
@@ -181,10 +210,7 @@ pub fn spawn_enemies_gradually(
             .spawn((
                 SpriteSheetBundle {
                     texture_atlas: texture_atlas_handle,
-                    sprite: TextureAtlasSprite {
-                        index: 0,
-                        ..default()
-                    },
+                    sprite: TextureAtlasSprite::new(0),
                     transform: Transform::from_xyz(random_x, random_y, 1.),
                     ..default()
                 },
@@ -257,5 +283,17 @@ pub fn catch_shot_event(
                 }
             }
         }
+    }
+}
+
+pub fn enemy_movement(
+    mut enemy_q: Query<(&mut Transform, &mut Handle<TextureAtlas>), With<Enemy>>,
+    player_handles: Res<PlayerHandles>,
+    time: Res<Time>,
+) {
+    for (mut transform, mut atlas) in enemy_q.iter_mut() {
+        *atlas = player_handles.run.clone();
+        transform.translation += Vec3::new(1., 1., 0.0).normalize() * 2. + time.delta_seconds();
+        break; // only do one
     }
 }

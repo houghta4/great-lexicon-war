@@ -10,7 +10,7 @@ use systems::*;
 use crate::game::enemy::events::EnemyShotEvent;
 use crate::AppState;
 
-use self::resources::{EnemySpawnCount, EnemySpawnTimer};
+use self::resources::{EnemySpawnTimer, EnemySpawns};
 use super::InGameState;
 
 pub struct EnemyPlugin;
@@ -20,17 +20,19 @@ impl Plugin for EnemyPlugin {
         app
             // Events
             .add_event::<EnemyShotEvent>()
+            // Startup system
+            .add_systems(Startup, init_texture_atlas_handles)
             // Systems
             .add_systems(Update, init_enemy_level_info)
             .add_systems(
                 Update,
                 (despawn_enemies, spawn_initial_enemies)
                     .chain()
-                    .run_if(resource_exists_and_changed::<EnemySpawnCount>()),
+                    .run_if(resource_exists_and_changed::<EnemySpawns>()),
             )
             .add_systems(
                 Update,
-                (catch_shot_event,)
+                (catch_shot_event, enemy_movement)
                     .run_if(in_state(AppState::InGame))
                     .run_if(in_state(InGameState::Running)),
             )

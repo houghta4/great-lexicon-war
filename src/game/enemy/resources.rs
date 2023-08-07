@@ -16,12 +16,18 @@ impl Default for EnemySpawnTimer {
 }
 
 #[derive(Resource)]
-pub struct EnemySpawnCount {
-    pub enemy_count: u32,
+pub struct EnemySpawns {
+    pub enemies: Vec<Vec2>,
 }
 
-impl Default for EnemySpawnCount {
+impl Default for EnemySpawns {
     fn default() -> Self {
-        EnemySpawnCount { enemy_count: 1 }
+        EnemySpawns { enemies: vec![] }
     }
+}
+
+#[derive(Resource, Default)]
+pub struct PlayerHandles {
+    pub idle: Handle<TextureAtlas>,
+    pub run: Handle<TextureAtlas>,
 }
