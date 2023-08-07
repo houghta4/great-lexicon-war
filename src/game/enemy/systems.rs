@@ -189,8 +189,16 @@ pub fn spawn_enemies_gradually(
         println!("Spawning enemy from timer");
         let win = win_q.get_single().unwrap();
         let font = asset_server.load("fonts/fyodor/truetype/Fyodor-BoldCondensed.ttf");
-        let random_x = random::<f32>() * win.width();
-        let random_y = random::<f32>() * win.height();
+        let random_x = if random::<f32>() < 0.5 {
+            random::<f32>() * win.width() / 2.
+        } else {
+            -random::<f32>() * win.width() / 2.
+        };
+        let random_y = if random::<f32>() < 0.5 {
+            random::<f32>() * win.height() / 2.
+        } else {
+            -random::<f32>() * win.height() / 2.
+        };
 
         let cur_sprite = SOLDIER_01_IDLE;
 
@@ -291,9 +299,8 @@ pub fn enemy_movement(
     player_handles: Res<PlayerHandles>,
     time: Res<Time>,
 ) {
-    for (mut transform, mut atlas) in enemy_q.iter_mut() {
+    if let Some((mut transform, mut atlas)) = enemy_q.iter_mut().next() {
         *atlas = player_handles.run.clone();
         transform.translation += Vec3::new(1., 1., 0.0).normalize() * 2. + time.delta_seconds();
-        break; // only do one
     }
 }

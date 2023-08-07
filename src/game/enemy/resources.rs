@@ -15,15 +15,9 @@ impl Default for EnemySpawnTimer {
     }
 }
 
-#[derive(Resource)]
+#[derive(Resource, Default)]
 pub struct EnemySpawns {
     pub enemies: Vec<Vec2>,
-}
-
-impl Default for EnemySpawns {
-    fn default() -> Self {
-        EnemySpawns { enemies: vec![] }
-    }
 }
 
 #[derive(Resource, Default)]
