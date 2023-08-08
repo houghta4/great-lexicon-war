@@ -1,11 +1,11 @@
 use bevy::{prelude::*, window::PrimaryWindow};
-use rand::random;
+use rand::seq::IteratorRandom;
+use rand::{random, thread_rng, Rng};
 
-use crate::components::{AnimationIndices, AnimationTimer};
 use crate::game::animations::components::AnimateSprite;
-use crate::game::enemy::components::*;
 use crate::game::enemy::events::EnemyShotEvent;
 use crate::game::enemy::resources::EnemySpawns;
+use crate::game::enemy::{components::*, EnemyAnimations};
 use crate::game::input::components::InputText;
 use crate::game::level::components::LevelInfo;
 use crate::game::level::events::LevelCompletedEvent;
@@ -14,7 +14,8 @@ use crate::game::utils::spawn_word;
 use crate::game::word_match::components::{Word, WordTarget};
 use crate::game::{SpriteSheetInfo, WordComplexity};
 
-use super::resources::{EnemySpawnTimer, PlayerHandles};
+use super::events::EnemyShotPlayerEvent;
+use super::resources::{EnemyHandles, EnemySpawnTimer};
 
 // https://github.com/bevyengine/bevy/blob/main/examples/2d/sprite_sheet.rs
 
@@ -36,41 +37,76 @@ const SOLDIER_01_RUN: SpriteSheetInfo = SpriteSheetInfo {
     rows: 1,
 };
 
+const SOVIET_IDLE: SpriteSheetInfo = SpriteSheetInfo {
+    path: "sprites/soviet_soldier/ppsh_idle.png",
+    x: 128.0,
+    y: 128.0,
+    cols: 10,
+    rows: 1,
+};
+const SOVIET_WALK: SpriteSheetInfo = SpriteSheetInfo {
+    path: "sprites/soviet_soldier/ppsh_walking.png",
+    x: 128.0,
+    y: 128.0,
+    cols: 8,
+    rows: 1,
+};
+const SOVIET_FIRE: SpriteSheetInfo = SpriteSheetInfo {
+    path: "sprites/soviet_soldier/ppsh_firing.png",
+    x: 128.0,
+    y: 128.0,
+    cols: 10,
+    rows: 1,
+};
+const GERMAN_WALK: SpriteSheetInfo = SpriteSheetInfo {
+    path: "sprites/german_soldier/mp40_walking.png",
+    x: 128.0,
+    y: 128.0,
+    cols: 8,
+    rows: 1,
+};
+const GERMAN_FIRE: SpriteSheetInfo = SpriteSheetInfo {
+    path: "sprites/german_soldier/mp40_firing.png",
+    x: 128.0,
+    y: 128.0,
+    cols: 10,
+    rows: 1,
+};
+
+fn get_texture_atlas_handle(
+    cur_sprite: SpriteSheetInfo,
+    asset_server: &Res<AssetServer>,
+    texture_atlases: &mut ResMut<Assets<TextureAtlas>>,
+) -> Handle<TextureAtlas> {
+    let texture_handle = asset_server.load(cur_sprite.path);
+    let texture_atlas = TextureAtlas::from_grid(
+        texture_handle,
+        Vec2::new(cur_sprite.x, cur_sprite.y),
+        cur_sprite.cols,
+        cur_sprite.rows,
+        None,
+        None,
+    );
+    texture_atlases.add(texture_atlas)
+}
+
+/// `Res<EnemyHandles>` contains all enemy sprite sheet handles
+///
+/// When rendering an ememy, clone whichever handle is needed
 pub fn init_texture_atlas_handles(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
 ) {
-    let cur_sprite = SOLDIER_01_IDLE;
+    let handles = EnemyHandles {
+        soviet_idle: get_texture_atlas_handle(SOVIET_IDLE, &asset_server, &mut texture_atlases),
+        soviet_walk: get_texture_atlas_handle(SOVIET_WALK, &asset_server, &mut texture_atlases),
+        soviet_fire: get_texture_atlas_handle(SOVIET_FIRE, &asset_server, &mut texture_atlases),
+        german_walk: get_texture_atlas_handle(GERMAN_WALK, &asset_server, &mut texture_atlases),
+        german_fire: get_texture_atlas_handle(GERMAN_FIRE, &asset_server, &mut texture_atlases),
+    };
 
-    let texture_handle = asset_server.load(cur_sprite.path);
-    let texture_atlas = TextureAtlas::from_grid(
-        texture_handle,
-        Vec2::new(cur_sprite.x, cur_sprite.y),
-        cur_sprite.cols,
-        cur_sprite.rows,
-        None,
-        None,
-    );
-    let texture_atlas_idle_handle = texture_atlases.add(texture_atlas);
-
-    let cur_sprite = SOLDIER_01_RUN;
-
-    let texture_handle = asset_server.load(cur_sprite.path);
-    let texture_atlas = TextureAtlas::from_grid(
-        texture_handle,
-        Vec2::new(cur_sprite.x, cur_sprite.y),
-        cur_sprite.cols,
-        cur_sprite.rows,
-        None,
-        None,
-    );
-    let texture_atlas_run_handle = texture_atlases.add(texture_atlas);
-
-    commands.insert_resource(PlayerHandles {
-        idle: texture_atlas_idle_handle,
-        run: texture_atlas_run_handle,
-    });
+    commands.insert_resource(handles);
 }
 
 /**
@@ -85,7 +121,7 @@ fn spawn_health_bar(builder: &mut ChildBuilder) {
                 custom_size: Some(Vec2::new(80.0, 2.0)),
                 ..default()
             },
-            transform: Transform::from_translation(Vec3::new(0., 25., 3.)),
+            transform: Transform::from_translation(Vec3::new(0., 70., 3.)),
             ..default()
         },
         HealthBar,
@@ -101,42 +137,29 @@ pub fn despawn_enemies(mut commands: Commands, enemy_q: Query<Entity, With<Enemy
 
 pub fn spawn_initial_enemies(
     mut commands: Commands,
-    win_q: Query<&Window, With<PrimaryWindow>>,
     asset_server: Res<AssetServer>,
-    // mut texture_atlases: ResMut<Assets<TextureAtlas>>,
     mut word_bank: ResMut<WordBank>,
     word_q: Query<&Word, (With<Word>, Without<InputText>)>,
     enemy_spawn: Res<EnemySpawns>,
-    player_handles: Res<PlayerHandles>,
+    enemy_handles: Res<EnemyHandles>,
 ) {
     println!("Spawning initial enemies");
-    let _win = win_q.get_single().unwrap();
     let font = asset_server.load("fonts/fyodor/truetype/Fyodor-BoldCondensed.ttf");
+    let mut rng = thread_rng();
     for pos in enemy_spawn.enemies.as_slice() {
-        // let cur_sprite = SOLDIER_01_IDLE;
-
-        // let texture_handle = asset_server.load(cur_sprite.path);
-        // let texture_atlas = TextureAtlas::from_grid(
-        //     texture_handle,
-        //     Vec2::new(cur_sprite.x, cur_sprite.y),
-        //     cur_sprite.cols,
-        //     cur_sprite.rows,
-        //     None,
-        //     None,
-        // );
-        // let texture_atlas_handle = texture_atlases.add(texture_atlas);
-        let animation_indices = AnimationIndices { first: 0, last: 6 };
-
+        let animation_indices = EnemyAnimations::SovietIdle.get_indices();
         commands
             .spawn((
                 SpriteSheetBundle {
-                    texture_atlas: player_handles.idle.clone(),
-                    sprite: TextureAtlasSprite::new(0),
+                    texture_atlas: enemy_handles.soviet_idle.clone(),
+                    sprite: TextureAtlasSprite::new(
+                        rng.gen_range(animation_indices.0..animation_indices.1),
+                    ),
                     transform: Transform::from_xyz(pos.x, pos.y, 1.),
                     ..default()
                 },
                 animation_indices,
-                AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating)),
+                EnemyAnimations::SovietIdle.get_timer(),
                 AnimateSprite,
                 Enemy::default(),
             ))
@@ -181,12 +204,12 @@ pub fn spawn_enemies_gradually(
     win_q: Query<&Window, With<PrimaryWindow>>,
     asset_server: Res<AssetServer>,
     enemy_spawn_timer: Res<EnemySpawnTimer>,
-    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
+    enemy_handles: Res<EnemyHandles>,
     mut word_bank: ResMut<WordBank>,
     word_q: Query<&Word, (With<Word>, Without<InputText>)>,
 ) {
     if enemy_spawn_timer.timer.finished() {
-        println!("Spawning enemy from timer");
+        println!("<< Spawning enemy from timer >>");
         let win = win_q.get_single().unwrap();
         let font = asset_server.load("fonts/fyodor/truetype/Fyodor-BoldCondensed.ttf");
         let random_x = if random::<f32>() < 0.5 {
@@ -199,31 +222,20 @@ pub fn spawn_enemies_gradually(
         } else {
             -random::<f32>() * win.height() / 2.
         };
-
-        let cur_sprite = SOLDIER_01_IDLE;
-
-        let texture_handle = asset_server.load(cur_sprite.path);
-        let texture_atlas = TextureAtlas::from_grid(
-            texture_handle,
-            Vec2::new(cur_sprite.x, cur_sprite.y),
-            cur_sprite.cols,
-            cur_sprite.rows,
-            None,
-            None,
-        );
-        let texture_atlas_handle = texture_atlases.add(texture_atlas);
-        let animation_indices = AnimationIndices { first: 0, last: 6 };
-
+        let animation_indices = EnemyAnimations::SovietIdle.get_indices();
+        let mut rng = thread_rng();
         commands
             .spawn((
                 SpriteSheetBundle {
-                    texture_atlas: texture_atlas_handle,
-                    sprite: TextureAtlasSprite::new(0),
+                    texture_atlas: enemy_handles.soviet_idle.clone(),
+                    sprite: TextureAtlasSprite::new(
+                        rng.gen_range(animation_indices.0..animation_indices.1),
+                    ),
                     transform: Transform::from_xyz(random_x, random_y, 1.),
                     ..default()
                 },
                 animation_indices,
-                AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating)),
+                EnemyAnimations::SovietIdle.get_timer(),
                 AnimateSprite,
                 Enemy::default(),
             ))
@@ -294,13 +306,60 @@ pub fn catch_shot_event(
     }
 }
 
-pub fn enemy_movement(
-    mut enemy_q: Query<(&mut Transform, &mut Handle<TextureAtlas>), With<Enemy>>,
-    player_handles: Res<PlayerHandles>,
+/// Enemy changes sprite sheet to shooting and triggers shot event
+pub fn enemy_shoot_player(
+    mut commands: Commands,
+    mut enemy_q: Query<(Entity, &Transform), (With<Enemy>, Without<Firing>)>,
+    enemy_handles: Res<EnemyHandles>,
+    mut enemy_shot_player_event_writer: EventWriter<EnemyShotPlayerEvent>,
+    keyboard_input: Res<Input<KeyCode>>, // Remove later
+) {
+    if keyboard_input.just_pressed(KeyCode::F2) {
+        println!("<< shoot >>");
+        let mut rng = rand::thread_rng();
+        if let Some((enemy_entity, transform)) = enemy_q.iter_mut().choose(&mut rng) {
+            // inserting this replaces the old one
+            commands.entity(enemy_entity).insert((
+                SpriteSheetBundle {
+                    texture_atlas: enemy_handles.soviet_fire.clone(),
+                    sprite: TextureAtlasSprite::new(0),
+                    transform: *transform,
+                    ..default()
+                },
+                EnemyAnimations::SovietFire.get_indices(),
+                EnemyAnimations::SovietFire.get_timer(),
+                Firing::default(),
+            ));
+            enemy_shot_player_event_writer.send(EnemyShotPlayerEvent(enemy_entity.index()));
+        }
+    }
+}
+
+/// Ticks enemy Firing timer until finished
+///
+/// When finished revert to base animation
+pub fn tick_and_replace_enemy_fire_timer(
+    mut commands: Commands,
+    mut firing_q: Query<(Entity, &mut Firing, &Transform), (With<Firing>, With<Enemy>)>,
+    enemy_handles: Res<EnemyHandles>,
     time: Res<Time>,
 ) {
-    if let Some((mut transform, mut atlas)) = enemy_q.iter_mut().next() {
-        *atlas = player_handles.run.clone();
-        transform.translation += Vec3::new(1., 1., 0.0).normalize() * 2. + time.delta_seconds();
+    for (enemy_entity, mut firing, transform) in firing_q.iter_mut() {
+        if firing.timer.just_finished() {
+            commands.entity(enemy_entity).remove::<Firing>();
+            // inserting this replaces the old one
+            commands.entity(enemy_entity).insert((
+                SpriteSheetBundle {
+                    texture_atlas: enemy_handles.soviet_idle.clone(),
+                    sprite: TextureAtlasSprite::new(0),
+                    transform: *transform,
+                    ..default()
+                },
+                EnemyAnimations::SovietIdle.get_indices(),
+                EnemyAnimations::SovietIdle.get_timer(),
+            ));
+        } else {
+            firing.timer.tick(time.delta());
+        }
     }
 }

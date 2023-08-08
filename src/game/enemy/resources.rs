@@ -21,7 +21,10 @@ pub struct EnemySpawns {
 }
 
 #[derive(Resource, Default)]
-pub struct PlayerHandles {
-    pub idle: Handle<TextureAtlas>,
-    pub run: Handle<TextureAtlas>,
+pub struct EnemyHandles {
+    pub soviet_idle: Handle<TextureAtlas>,
+    pub soviet_walk: Handle<TextureAtlas>,
+    pub soviet_fire: Handle<TextureAtlas>,
+    pub german_walk: Handle<TextureAtlas>,
+    pub german_fire: Handle<TextureAtlas>,
 }

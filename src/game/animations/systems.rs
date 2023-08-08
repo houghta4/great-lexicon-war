@@ -20,8 +20,8 @@ pub fn animate_sprite(
         .for_each(|(indices, mut timer, mut sprite)| {
             timer.tick(time.delta());
             if timer.just_finished() {
-                sprite.index = if sprite.index == indices.last {
-                    indices.first
+                sprite.index = if sprite.index == indices.1 {
+                    indices.0
                 } else {
                     sprite.index + 1
                 };

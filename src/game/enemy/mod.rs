@@ -7,9 +7,11 @@ mod systems;
 
 use systems::*;
 
-use crate::game::enemy::events::EnemyShotEvent;
+use crate::components::AnimationTimer;
 use crate::AppState;
+use crate::{components::AnimationIndices, game::enemy::events::EnemyShotEvent};
 
+use self::events::EnemyShotPlayerEvent;
 use self::resources::{EnemySpawnTimer, EnemySpawns};
 use super::InGameState;
 
@@ -20,6 +22,7 @@ impl Plugin for EnemyPlugin {
         app
             // Events
             .add_event::<EnemyShotEvent>()
+            .add_event::<EnemyShotPlayerEvent>()
             // Startup system
             .add_systems(Startup, init_texture_atlas_handles)
             // Systems
@@ -32,7 +35,11 @@ impl Plugin for EnemyPlugin {
             )
             .add_systems(
                 Update,
-                (catch_shot_event, enemy_movement)
+                (
+                    catch_shot_event,
+                    enemy_shoot_player,
+                    tick_and_replace_enemy_fire_timer,
+                )
                     .run_if(in_state(AppState::InGame))
                     .run_if(in_state(InGameState::Running)),
             )
@@ -45,5 +52,33 @@ impl Plugin for EnemyPlugin {
             )
             // On Exit systems
             .add_systems(OnExit(AppState::InGame), despawn_enemies);
+    }
+}
+
+#[allow(dead_code)]
+pub enum EnemyAnimations {
+    SovietIdle,
+    SovietWalk,
+    SovietFire,
+    GermanWalk,
+    GermanFire,
+}
+
+impl EnemyAnimations {
+    fn get_indices(&self) -> AnimationIndices {
+        match *self {
+            Self::SovietIdle => AnimationIndices(0, 9),
+            Self::SovietWalk => AnimationIndices(0, 7),
+            Self::SovietFire => AnimationIndices(0, 9),
+            Self::GermanWalk => AnimationIndices(0, 7),
+            Self::GermanFire => AnimationIndices(0, 7),
+        }
+    }
+    fn get_timer(&self) -> AnimationTimer {
+        match *self {
+            Self::SovietFire => AnimationTimer(Timer::from_seconds(0.035, TimerMode::Repeating)),
+            Self::GermanFire => AnimationTimer(Timer::from_seconds(0.035, TimerMode::Repeating)),
+            _ => AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating)),
+        }
     }
 }

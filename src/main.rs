@@ -13,6 +13,12 @@ use game::InGamePlugin;
 use systems::*;
 
 fn main() {
+    println!("\n<< ---------Dev Commands--------- >>");
+    println!("F1: Get a word from each category");
+    println!("F2: Trigger EnemyShotPlayerEvent");
+    println!("del: Move to next level");
+    println!("<< ------------------------------ >>\n");
+
     App::new()
         // Default plugins
         .add_plugins(

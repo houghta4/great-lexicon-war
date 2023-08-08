@@ -2,10 +2,6 @@ use bevy::prelude::*;
 
 use crate::game::ui::pause_menu::{components::*, styles::*};
 
-// pub fn spawn_pause_menu(mut commands: Commands, asset_server: Res<AssetServer>) {
-//     build_pause_menu(&mut commands, &asset_server);
-// }
-
 pub fn despawn_pause_menu(mut commands: Commands, pause_menu_q: Query<Entity, With<PauseMenu>>) {
     if let Ok(pause_menu_entity) = pause_menu_q.get_single() {
         commands.entity(pause_menu_entity).despawn_recursive();

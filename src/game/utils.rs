@@ -25,7 +25,7 @@ pub fn spawn_word(builder: &mut ChildBuilder, word: &str, font: &Handle<Font>) {
                         },
                     ),
                 ]),
-                transform: Transform::from_translation(Vec3::new(0., 15., 2.)),
+                transform: Transform::from_translation(Vec3::new(0., 60., 2.)),
                 ..default()
             },
             Word(
