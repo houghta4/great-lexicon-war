@@ -21,7 +21,7 @@ pub fn setup_text_input(mut commands: Commands, win_q: Query<&Window, With<Prima
                     ..default()
                 },
             ),
-            transform: Transform::from_xyz(win.width() / 2.0, win.height() / 2.0, 999.0),
+            transform: Transform::from_xyz(0., -win.height() / 2.0 + 20., 999.0),
             ..default()
         },
         InputText,
