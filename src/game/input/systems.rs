@@ -1,32 +1,7 @@
-use crate::game::input::components::InputText;
-use crate::game::input::resource::BackspaceTimer;
 use bevy::input::keyboard::KeyboardInput;
 use bevy::prelude::*;
-use bevy::window::PrimaryWindow;
-
-/**
-    Setup for the text input. Spawns a text field for input display
-**/
-pub fn setup_text_input(mut commands: Commands, win_q: Query<&Window, With<PrimaryWindow>>) {
-    // normally can't just unwrap, but this is guaranteed to exist from Bevy
-    let win = win_q.get_single().unwrap();
-
-    commands.spawn((
-        Text2dBundle {
-            text: Text::from_section(
-                "".to_string(), // start empty
-                TextStyle {
-                    font_size: 20.0,
-                    color: Color::WHITE,
-                    ..default()
-                },
-            ),
-            transform: Transform::from_xyz(0., -win.height() / 2.0 + 20., 999.0),
-            ..default()
-        },
-        InputText,
-    ));
-}
+use crate::game::input::components::InputText;
+use crate::game::input::resource::BackspaceTimer;
 
 /**
     Listens for keyboard key inputs (a-z and A-Z) and appends them onto the input text

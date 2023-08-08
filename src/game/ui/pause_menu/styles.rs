@@ -1,12 +1,5 @@
 use bevy::prelude::*;
 
-pub const BACKGROUND_COLOR: BackgroundColor =
-    BackgroundColor(Color::rgba(0.984375, 0.95703125, 0.89453125, 0.5));
-
-pub const NORMAL_BUTTON: Color = Color::rgb(0.15, 0.15, 0.15);
-pub const HOVERED_BUTTON: Color = Color::rgb(0.25, 0.25, 0.25);
-pub const PRESSED_BUTTON: Color = Color::rgb(0.99609375, 0.64453125, 0.);
-
 pub fn get_pause_menu_style() -> Style {
     Style {
         position_type: PositionType::Absolute, // Needed to display separately from HUD.
