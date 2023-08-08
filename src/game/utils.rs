@@ -5,8 +5,6 @@ use bevy::prelude::*;
     Spawn a given word for a given entity, with a black background for contrast
 **/
 pub fn spawn_word(builder: &mut ChildBuilder, word: &str, font: &Handle<Font>) {
-    // TODO: find better way to go about this. Multiple fn will be calling this and having to take use WordBank and enemy word query each time seems redudant
-    // Look into generating word here somehow
     builder
         .spawn((
             Text2dBundle {
