@@ -11,8 +11,8 @@ use crate::components::AnimationTimer;
 use crate::AppState;
 use crate::{components::AnimationIndices, game::enemy::events::EnemyShotEvent};
 
-use self::events::EnemyShotPlayerEvent;
 use self::resources::{EnemySpawnTimer, EnemySpawns};
+use super::level::events::LevelCompletedEvent;
 use super::InGameState;
 
 pub struct EnemyPlugin;
@@ -22,11 +22,13 @@ impl Plugin for EnemyPlugin {
         app
             // Events
             .add_event::<EnemyShotEvent>()
-            .add_event::<EnemyShotPlayerEvent>()
             // Startup system
             .add_systems(Startup, init_texture_atlas_handles)
             // Systems
-            .add_systems(Update, init_enemy_level_info)
+            .add_systems(
+                Update,
+                init_enemy_level_info.run_if(on_event::<LevelCompletedEvent>()),
+            )
             .add_systems(
                 Update,
                 (despawn_enemies, spawn_initial_enemies)
@@ -45,7 +47,7 @@ impl Plugin for EnemyPlugin {
             )
             .add_systems(
                 Update,
-                (tick_enemy_spawn_timer, spawn_enemies_gradually)
+                spawn_enemies_gradually
                     .run_if(resource_exists::<EnemySpawnTimer>())
                     .run_if(in_state(AppState::InGame))
                     .run_if(in_state(InGameState::Running)),

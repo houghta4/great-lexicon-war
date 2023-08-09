@@ -2,6 +2,7 @@ use bevy::{prelude::*, window::PrimaryWindow};
 use rand::seq::IteratorRandom;
 use rand::{random, thread_rng, Rng};
 
+use crate::components::{AnimationIndices, AnimationTimer};
 use crate::game::animations::components::AnimateSprite;
 use crate::game::enemy::events::EnemyShotEvent;
 use crate::game::enemy::resources::EnemySpawns;
@@ -9,33 +10,15 @@ use crate::game::enemy::{components::*, EnemyAnimations};
 use crate::game::input::components::InputText;
 use crate::game::level::components::LevelInfo;
 use crate::game::level::events::LevelCompletedEvent;
+use crate::game::player::events::PlayerShotEvent;
 use crate::game::resources::{RandomWord, WordBank};
 use crate::game::utils::spawn_word;
 use crate::game::word_match::components::{Word, WordTarget};
 use crate::game::{SpriteSheetInfo, WordComplexity};
 
-use super::events::EnemyShotPlayerEvent;
 use super::resources::{EnemyHandles, EnemySpawnTimer};
 
 // https://github.com/bevyengine/bevy/blob/main/examples/2d/sprite_sheet.rs
-
-#[allow(dead_code)]
-const SOLDIER_01_IDLE: SpriteSheetInfo = SpriteSheetInfo {
-    path: "sprites/soldier_01/Idle.png",
-    x: 128.0,
-    y: 128.0,
-    cols: 7,
-    rows: 1,
-};
-
-#[allow(dead_code)]
-const SOLDIER_01_RUN: SpriteSheetInfo = SpriteSheetInfo {
-    path: "sprites/soldier_01/Run.png",
-    x: 128.0,
-    y: 128.0,
-    cols: 7,
-    rows: 1,
-};
 
 const SOVIET_IDLE: SpriteSheetInfo = SpriteSheetInfo {
     path: "sprites/soviet_soldier/ppsh_idle.png",
@@ -72,6 +55,14 @@ const GERMAN_FIRE: SpriteSheetInfo = SpriteSheetInfo {
     cols: 10,
     rows: 1,
 };
+
+type EnemyBundle = (
+    SpriteSheetBundle,
+    AnimationIndices,
+    AnimationTimer,
+    AnimateSprite,
+    Enemy,
+);
 
 fn get_texture_atlas_handle(
     cur_sprite: SpriteSheetInfo,
@@ -135,6 +126,29 @@ pub fn despawn_enemies(mut commands: Commands, enemy_q: Query<Entity, With<Enemy
     });
 }
 
+/// All components a newly created Enemy will need
+// TODO: factions?
+fn get_enemy_bundle(x: f32, y: f32, enemy_handles: &Res<EnemyHandles>) -> EnemyBundle {
+    let animation_indices = EnemyAnimations::SovietIdle.get_indices();
+    let mut rng = thread_rng();
+
+    (
+        SpriteSheetBundle {
+            texture_atlas: enemy_handles.soviet_idle.clone(),
+            sprite: TextureAtlasSprite::new(
+                rng.gen_range(animation_indices.0..animation_indices.1),
+            ),
+            transform: Transform::from_xyz(x, y, 1.),
+            ..default()
+        },
+        animation_indices,
+        EnemyAnimations::SovietIdle.get_timer(),
+        AnimateSprite,
+        Enemy::default(),
+    )
+}
+
+/// Spawn all enemies related to the level info
 pub fn spawn_initial_enemies(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
@@ -145,24 +159,9 @@ pub fn spawn_initial_enemies(
 ) {
     println!("Spawning initial enemies");
     let font = asset_server.load("fonts/fyodor/truetype/Fyodor-BoldCondensed.ttf");
-    let mut rng = thread_rng();
     for pos in enemy_spawn.enemies.as_slice() {
-        let animation_indices = EnemyAnimations::SovietIdle.get_indices();
         commands
-            .spawn((
-                SpriteSheetBundle {
-                    texture_atlas: enemy_handles.soviet_idle.clone(),
-                    sprite: TextureAtlasSprite::new(
-                        rng.gen_range(animation_indices.0..animation_indices.1),
-                    ),
-                    transform: Transform::from_xyz(pos.x, pos.y, 1.),
-                    ..default()
-                },
-                animation_indices,
-                EnemyAnimations::SovietIdle.get_timer(),
-                AnimateSprite,
-                Enemy::default(),
-            ))
+            .spawn(get_enemy_bundle(pos.x, pos.y, &enemy_handles))
             .with_children(|builder| {
                 spawn_health_bar(builder);
                 spawn_word(
@@ -193,21 +192,19 @@ pub fn init_enemy_level_info(
     }
 }
 
-/// Tick spawn timer while in game and unpaused
-pub fn tick_enemy_spawn_timer(mut enemy_spawn_timer: ResMut<EnemySpawnTimer>, time: Res<Time>) {
-    enemy_spawn_timer.timer.tick(time.delta());
-}
-
 /// Spawn enemies over time depending on the current level's `spawn_rate`
+#[allow(clippy::too_many_arguments)]
 pub fn spawn_enemies_gradually(
     mut commands: Commands,
     win_q: Query<&Window, With<PrimaryWindow>>,
     asset_server: Res<AssetServer>,
-    enemy_spawn_timer: Res<EnemySpawnTimer>,
+    mut enemy_spawn_timer: ResMut<EnemySpawnTimer>,
     enemy_handles: Res<EnemyHandles>,
     mut word_bank: ResMut<WordBank>,
     word_q: Query<&Word, (With<Word>, Without<InputText>)>,
+    time: Res<Time>,
 ) {
+    enemy_spawn_timer.timer.tick(time.delta());
     if enemy_spawn_timer.timer.finished() {
         println!("<< Spawning enemy from timer >>");
         let win = win_q.get_single().unwrap();
@@ -222,23 +219,8 @@ pub fn spawn_enemies_gradually(
         } else {
             -random::<f32>() * win.height() / 2.
         };
-        let animation_indices = EnemyAnimations::SovietIdle.get_indices();
-        let mut rng = thread_rng();
         commands
-            .spawn((
-                SpriteSheetBundle {
-                    texture_atlas: enemy_handles.soviet_idle.clone(),
-                    sprite: TextureAtlasSprite::new(
-                        rng.gen_range(animation_indices.0..animation_indices.1),
-                    ),
-                    transform: Transform::from_xyz(random_x, random_y, 1.),
-                    ..default()
-                },
-                animation_indices,
-                EnemyAnimations::SovietIdle.get_timer(),
-                AnimateSprite,
-                Enemy::default(),
-            ))
+            .spawn(get_enemy_bundle(random_x, random_y, &enemy_handles))
             .with_children(|builder| {
                 spawn_health_bar(builder);
                 spawn_word(
@@ -306,12 +288,13 @@ pub fn catch_shot_event(
     }
 }
 
+// TODO: How should we determine when an enemy shoots the player?
 /// Enemy changes sprite sheet to shooting and triggers shot event
 pub fn enemy_shoot_player(
     mut commands: Commands,
     mut enemy_q: Query<(Entity, &Transform), (With<Enemy>, Without<Firing>)>,
     enemy_handles: Res<EnemyHandles>,
-    mut enemy_shot_player_event_writer: EventWriter<EnemyShotPlayerEvent>,
+    mut enemy_shot_player_event_writer: EventWriter<PlayerShotEvent>,
     keyboard_input: Res<Input<KeyCode>>, // Remove later
 ) {
     if keyboard_input.just_pressed(KeyCode::F2) {
@@ -330,7 +313,7 @@ pub fn enemy_shoot_player(
                 EnemyAnimations::SovietFire.get_timer(),
                 Firing::default(),
             ));
-            enemy_shot_player_event_writer.send(EnemyShotPlayerEvent(enemy_entity.index()));
+            enemy_shot_player_event_writer.send(PlayerShotEvent);
         }
     }
 }
@@ -345,6 +328,7 @@ pub fn tick_and_replace_enemy_fire_timer(
     time: Res<Time>,
 ) {
     for (enemy_entity, mut firing, transform) in firing_q.iter_mut() {
+        firing.timer.tick(time.delta());
         if firing.timer.just_finished() {
             commands.entity(enemy_entity).remove::<Firing>();
             // inserting this replaces the old one
@@ -358,8 +342,6 @@ pub fn tick_and_replace_enemy_fire_timer(
                 EnemyAnimations::SovietIdle.get_indices(),
                 EnemyAnimations::SovietIdle.get_timer(),
             ));
-        } else {
-            firing.timer.tick(time.delta());
         }
     }
 }
