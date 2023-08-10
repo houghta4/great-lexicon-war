@@ -1,4 +1,4 @@
 use bevy::prelude::Event;
 
 #[derive(Event)]
-pub struct EnemyShotEvent(pub usize);
+pub struct EnemyShotEvent(pub u32);

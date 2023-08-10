@@ -1,27 +1,86 @@
 use bevy::prelude::*;
 
 mod components;
-mod systems;
 pub mod events;
+mod resources;
+mod systems;
 
 use systems::*;
 
+use crate::components::AnimationTimer;
 use crate::AppState;
-use crate::game::enemy::events::EnemyShotEvent;
+use crate::{components::AnimationIndices, game::enemy::events::EnemyShotEvent};
+
+use self::resources::{EnemySpawnTimer, EnemySpawns};
+use super::level::events::LevelCompletedEvent;
+use super::InGameState;
 
 pub struct EnemyPlugin;
 
 impl Plugin for EnemyPlugin {
     fn build(&self, app: &mut App) {
         app
+            // Events
             .add_event::<EnemyShotEvent>()
-            // Start up systems
+            // Startup system
+            .add_systems(Startup, init_texture_atlas_handles)
+            // Systems
             .add_systems(
-                OnEnter(AppState::InGame),
-                (spawn_single_enemy, spawn_enemies),
+                Update,
+                init_enemy_level_info.run_if(on_event::<LevelCompletedEvent>()),
             )
-            .add_systems(Update, catch_shot_event.run_if(in_state(AppState::InGame)))
+            .add_systems(
+                Update,
+                (despawn_enemies, spawn_initial_enemies)
+                    .chain()
+                    .run_if(resource_exists_and_changed::<EnemySpawns>()),
+            )
+            .add_systems(
+                Update,
+                (
+                    catch_shot_event,
+                    enemy_shoot_player,
+                    tick_and_replace_enemy_fire_timer,
+                )
+                    .run_if(in_state(AppState::InGame))
+                    .run_if(in_state(InGameState::Running)),
+            )
+            .add_systems(
+                Update,
+                spawn_enemies_gradually
+                    .run_if(resource_exists::<EnemySpawnTimer>())
+                    .run_if(in_state(AppState::InGame))
+                    .run_if(in_state(InGameState::Running)),
+            )
             // On Exit systems
             .add_systems(OnExit(AppState::InGame), despawn_enemies);
+    }
+}
+
+#[allow(dead_code)]
+pub enum EnemyAnimations {
+    SovietIdle,
+    SovietWalk,
+    SovietFire,
+    GermanWalk,
+    GermanFire,
+}
+
+impl EnemyAnimations {
+    fn get_indices(&self) -> AnimationIndices {
+        match *self {
+            Self::SovietIdle => AnimationIndices(0, 9),
+            Self::SovietWalk => AnimationIndices(0, 7),
+            Self::SovietFire => AnimationIndices(0, 9),
+            Self::GermanWalk => AnimationIndices(0, 7),
+            Self::GermanFire => AnimationIndices(0, 7),
+        }
+    }
+    fn get_timer(&self) -> AnimationTimer {
+        match *self {
+            Self::SovietFire => AnimationTimer(Timer::from_seconds(0.035, TimerMode::Repeating)),
+            Self::GermanFire => AnimationTimer(Timer::from_seconds(0.035, TimerMode::Repeating)),
+            _ => AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating)),
+        }
     }
 }

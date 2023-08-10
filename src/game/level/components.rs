@@ -4,8 +4,8 @@ use serde::{Deserialize, Serialize};
 #[derive(Component, Debug)]
 pub struct LevelInfo {
     pub map: String,
-    pub enemy_count: u32,
     pub spawn_rate: f32,
+    pub enemies: Vec<Vec2>,
 }
 
 #[derive(Default, Component, Debug, Deserialize, Serialize)]
