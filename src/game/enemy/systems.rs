@@ -1,5 +1,4 @@
 use bevy::{prelude::*, window::PrimaryWindow};
-use rand::seq::IteratorRandom;
 use rand::{random, thread_rng, Rng};
 
 use crate::components::{AnimationIndices, AnimationTimer};
@@ -10,6 +9,7 @@ use crate::game::enemy::{components::*, EnemyAnimations};
 use crate::game::input::components::InputText;
 use crate::game::level::components::LevelInfo;
 use crate::game::level::events::LevelCompletedEvent;
+use crate::game::player::components::Player;
 use crate::game::player::events::PlayerShotEvent;
 use crate::game::resources::{RandomWord, WordBank};
 use crate::game::utils::spawn_word;
@@ -135,9 +135,11 @@ fn get_enemy_bundle(x: f32, y: f32, enemy_handles: &Res<EnemyHandles>) -> EnemyB
     (
         SpriteSheetBundle {
             texture_atlas: enemy_handles.soviet_idle.clone(),
-            sprite: TextureAtlasSprite::new(
-                rng.gen_range(animation_indices.0..animation_indices.1),
-            ),
+            sprite: TextureAtlasSprite {
+                index: rng.gen_range(animation_indices.0..animation_indices.1),
+                flip_x: true,
+                ..default()
+            },
             transform: Transform::from_xyz(x, y, 1.),
             ..default()
         },
@@ -288,32 +290,44 @@ pub fn catch_shot_event(
     }
 }
 
-// TODO: How should we determine when an enemy shoots the player?
 /// Enemy changes sprite sheet to shooting and triggers shot event
 pub fn enemy_shoot_player(
     mut commands: Commands,
     mut enemy_q: Query<(Entity, &Transform), (With<Enemy>, Without<Firing>)>,
     enemy_handles: Res<EnemyHandles>,
     mut enemy_shot_player_event_writer: EventWriter<PlayerShotEvent>,
-    keyboard_input: Res<Input<KeyCode>>, // Remove later
+    player_q: Query<&Transform, With<Player>>,
+    win_q: Query<&Window, With<PrimaryWindow>>,
 ) {
-    if keyboard_input.just_pressed(KeyCode::F2) {
-        println!("<< shoot >>");
-        let mut rng = rand::thread_rng();
-        if let Some((enemy_entity, transform)) = enemy_q.iter_mut().choose(&mut rng) {
-            // inserting this replaces the old one
-            commands.entity(enemy_entity).insert((
-                SpriteSheetBundle {
-                    texture_atlas: enemy_handles.soviet_fire.clone(),
-                    sprite: TextureAtlasSprite::new(0),
-                    transform: *transform,
-                    ..default()
-                },
-                EnemyAnimations::SovietFire.get_indices(),
-                EnemyAnimations::SovietFire.get_timer(),
-                Firing::default(),
-            ));
-            enemy_shot_player_event_writer.send(PlayerShotEvent);
+    let win = win_q.get_single().unwrap();
+    if let Ok(player_transform) = player_q.get_single() {
+        for (enemy_entity, enemy_transform) in enemy_q.iter_mut() {
+            // If enemy is on screen, theres a chance to shoot player
+            let distance = player_transform
+                .translation
+                .distance(enemy_transform.translation)
+                + 0.1;
+            if distance < f32::max(win.height(), win.width()) {
+                let shot_chance = distance * random::<f32>();
+                if random::<f32>() > shot_chance {
+                    println!("<< shot >>");
+                    commands.entity(enemy_entity).insert((
+                        SpriteSheetBundle {
+                            texture_atlas: enemy_handles.soviet_fire.clone(),
+                            sprite: TextureAtlasSprite {
+                                flip_x: true,
+                                ..default()
+                            },
+                            transform: *enemy_transform,
+                            ..default()
+                        },
+                        EnemyAnimations::SovietFire.get_indices(),
+                        EnemyAnimations::SovietFire.get_timer(),
+                        Firing::default(),
+                    ));
+                    enemy_shot_player_event_writer.send(PlayerShotEvent);
+                }
+            }
         }
     }
 }
@@ -335,7 +349,10 @@ pub fn tick_and_replace_enemy_fire_timer(
             commands.entity(enemy_entity).insert((
                 SpriteSheetBundle {
                     texture_atlas: enemy_handles.soviet_idle.clone(),
-                    sprite: TextureAtlasSprite::new(0),
+                    sprite: TextureAtlasSprite {
+                        flip_x: true,
+                        ..default()
+                    },
                     transform: *transform,
                     ..default()
                 },
