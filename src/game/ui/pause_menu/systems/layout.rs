@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 
 use crate::game::ui::pause_menu::{components::*, styles::*};
+use crate::game::ui::styles::{BACKGROUND_COLOR, NORMAL_BUTTON};
 
 pub fn despawn_pause_menu(mut commands: Commands, pause_menu_q: Query<Entity, With<PauseMenu>>) {
     if let Ok(pause_menu_entity) = pause_menu_q.get_single() {

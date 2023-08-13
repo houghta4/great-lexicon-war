@@ -17,8 +17,7 @@ pub struct TextInputPlugin;
 **/
 impl Plugin for TextInputPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(AppState::InGame), setup_text_input)
-            .add_systems(
+        app.add_systems(
                 Update,
                 (
                     listen_received_character_events,
