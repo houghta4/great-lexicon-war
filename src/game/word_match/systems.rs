@@ -2,6 +2,7 @@ use std::cmp;
 use bevy::prelude::*;
 use crate::game::enemy::events::EnemyShotEvent;
 use crate::game::input::components::InputText;
+use crate::game::player::events::PlayerReloadEvent;
 use crate::game::word_match::components::{Word, WordTarget};
 
 //TODO: rewrite to be more efficient
@@ -11,7 +12,8 @@ use crate::game::word_match::components::{Word, WordTarget};
 pub fn check_matches(
     mut input_text: Query<&mut Text, With<InputText>>,
     mut words: Query<(&mut Text, &Word), (With<Word>, Without<InputText>)>,
-    mut enemy_event_writer: EventWriter<EnemyShotEvent>
+    mut enemy_event_writer: EventWriter<EnemyShotEvent>,
+    mut reload_event_writer: EventWriter<PlayerReloadEvent>,
 ) {
 
     let input_str = input_text.single_mut().sections[0].value.to_string();
@@ -56,6 +58,9 @@ pub fn check_matches(
                 WordTarget::Enemy(id) => {
                     enemy_event_writer.send(EnemyShotEvent(id));
                 },
+                WordTarget::Reload => {
+                    reload_event_writer.send(PlayerReloadEvent);
+                }
                 _ => ()
             }
             //TODO: probably should move the below elsewhere so its not edited in two places
