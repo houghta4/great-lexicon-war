@@ -21,5 +21,6 @@ impl Plugin for PlayerPlugin {
             .add_systems(OnEnter(AppState::InGame), spawn_player)
             // On exit InGame state
             .add_systems(OnExit(AppState::InGame), despawn_player);
+            //.add_systems(Update, move_player.run_if(in_state(AppState::InGame)));
     }
 }
