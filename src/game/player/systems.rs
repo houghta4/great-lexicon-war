@@ -1,8 +1,7 @@
 use bevy::prelude::*;
 use crate::game::animations::components::{CharacterAnimations, MovableCharacter};
-use crate::game::resources::CharacterHandles;
-
 use crate::game::enemy::events::EnemyShotEvent;
+use crate::game::resources::CharacterHandles;
 
 use super::{
     components::*,
