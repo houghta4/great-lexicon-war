@@ -216,6 +216,7 @@ pub fn catch_shot_event(
 }
 
 /// Enemy changes sprite sheet to shooting and triggers shot event
+#[allow(clippy::type_complexity)]
 pub fn enemy_shoot_player(
     mut commands: Commands,
     mut enemy_q: Query<(Entity, &Transform), (With<Enemy>, Without<Firing>)>,
@@ -259,6 +260,7 @@ pub fn enemy_shoot_player(
 /// Ticks enemy Firing timer until finished
 ///
 /// When finished revert to base animation
+#[allow(clippy::type_complexity)]
 pub fn tick_and_replace_enemy_fire_timer(
     mut commands: Commands,
     mut firing_q: Query<(Entity, &mut Firing, &Transform), (With<Firing>, With<Enemy>)>,

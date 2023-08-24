@@ -9,6 +9,7 @@ use crate::game::word_match::components::{Word, WordTarget};
 /**
     Checks for matches between Words and user input
 **/
+#[allow(clippy::type_complexity)]
 pub fn check_matches(
     mut input_text: Query<&mut Text, With<InputText>>,
     mut words: Query<(&mut Text, &Word), (With<Word>, Without<InputText>)>,

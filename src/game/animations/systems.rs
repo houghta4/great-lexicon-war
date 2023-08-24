@@ -33,6 +33,7 @@ pub fn animate_sprite(
 /**
     Catches character move events and sets character destinations, switches to walking animation
 **/
+#[allow(clippy::type_complexity)]
 pub fn catch_character_move_event(
     mut commands: Commands,
     mut character_q: Query<(&mut MovableCharacter, &Transform, Entity), With<MovableCharacter>>,
@@ -71,6 +72,7 @@ pub fn catch_character_move_event(
 /**
 Moves character when they have a destination, switches animation, and moves player
  **/
+#[allow(clippy::type_complexity)]
 pub fn move_character(
     mut commands: Commands,
     mut character_q: Query<(&mut MovableCharacter, &mut Transform, Entity), With<MovableCharacter>>,

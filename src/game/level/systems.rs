@@ -51,6 +51,7 @@ fn parse_tiled_map(map_path: &str) -> Result<TiledMap, Box<dyn std::error::Error
     serde_json::from_str(&map_json).map_err(|err| Box::new(err) as Box<dyn std::error::Error>)
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn render_level_data(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
