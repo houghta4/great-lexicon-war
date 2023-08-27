@@ -22,7 +22,7 @@ pub fn spawn_player(mut commands: Commands, character_handles: Res<CharacterHand
                 index: 0,
                 ..default()
             },
-            transform: Transform::from_xyz(0., 0., 1.0),
+            transform: Transform::from_xyz(0., 0., 3.0),
             ..default()
         },
         CharacterAnimations::SovietIdle.get_animation(),

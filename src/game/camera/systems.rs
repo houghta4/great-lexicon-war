@@ -15,20 +15,20 @@ pub fn camera_follow_player(
             // Keep player within the screen's edges
 
             // Update x values
-            if player_transform.translation.x > camera_transform.translation.x + win.width() / 4. {
-                camera_transform.translation.x += 1.;
+            if player_transform.translation.x > camera_transform.translation.x - win.width() / 3. {
+                camera_transform.translation.x += 1.5;
             }
-            if player_transform.translation.x < camera_transform.translation.x - win.width() / 4. {
-                camera_transform.translation.x -= 1.;
+            if player_transform.translation.x < camera_transform.translation.x - win.width() / 8. {
+                camera_transform.translation.x -= 1.5;
             }
 
             // Update y values
-            if player_transform.translation.y > camera_transform.translation.y + win.height() / 4. {
+            /*if player_transform.translation.y > camera_transform.translation.y {
                 camera_transform.translation.y += 1.;
             }
-            if player_transform.translation.y < camera_transform.translation.y - win.height() / 4. {
+            if player_transform.translation.y < camera_transform.translation.y - win.height() / 8. {
                 camera_transform.translation.y -= 1.;
-            }
+            }*/
         } else {
             println!("Camera query was not Ok.")
         }
