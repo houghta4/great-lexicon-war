@@ -113,9 +113,8 @@ pub fn move_character(
                     }
                 } else {
                     let proportion = x_diff.abs() / y_diff.abs();
-                    let x_multi = proportion.powf(2.);
-                    let mut y: f32 = (50. / (x_multi + 1.)).powf(0.5);
-                    let mut x = y * x_multi;
+                    let mut y: f32 = (50. / (proportion.powf(2.) + 1.)).powf(0.5);
+                    let mut x = y * proportion;
                     if x_diff > 0. {
                         x *= -1.;
                     }
