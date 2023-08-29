@@ -6,7 +6,7 @@ pub enum WordTarget {
     Reload,
     Heal,
     Enemy(u32), // bevy stores entity ids as u32
-    Move(u32)
+    Move(u32),
 }
 
 #[derive(Component, Debug)]

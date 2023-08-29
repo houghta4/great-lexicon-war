@@ -6,13 +6,14 @@ use crate::game::enemy::events::EnemyShotEvent;
 
 use super::{
     components::*,
-    events::{PlayerReloadEvent, PlayerShotEvent},
+    events::{PlayerHealEvent, PlayerReloadEvent, PlayerShotEvent},
 };
 
 // Not sure if needed, but random player sprite is 64x64
 pub const _PLAYER_SIZE: f32 = 64.0;
 pub const _PLAYER_SPEED: f32 = 500.0;
-pub const PLAYER_DAMAGE: f32 = 5.0;
+pub const PLAYER_DAMAGE: f32 = 15.0;
+pub const PLAYER_HEAL: f32 = 25.0;
 
 /// Spawn `Player` entity
 pub fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>) {
@@ -83,6 +84,26 @@ pub fn player_reload(
         if let Ok(mut player) = player_q.get_single_mut() {
             player.ammo.0 = player.ammo.1;
             println!("<< reloading >>");
+        }
+    }
+}
+
+pub fn player_heal(
+    mut player_q: Query<&mut Player>,
+    mut heal_event_reader: EventReader<PlayerHealEvent>,
+) {
+    for _ in heal_event_reader.iter() {
+        if let Ok(mut player) = player_q.get_single_mut() {
+            if player.health_packs > 0 {
+                player.health_packs -= 1;
+
+                println!("healing!");
+                if player.health + PLAYER_HEAL > 100.0 {
+                    player.health = 100.0;
+                } else {
+                    player.health += 25.;
+                }
+            }
         }
     }
 }

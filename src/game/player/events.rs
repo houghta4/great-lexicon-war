@@ -5,3 +5,6 @@ pub struct PlayerShotEvent;
 
 #[derive(Event)]
 pub struct PlayerReloadEvent;
+
+#[derive(Event)]
+pub struct PlayerHealEvent;

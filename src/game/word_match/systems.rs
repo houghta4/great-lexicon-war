@@ -1,9 +1,9 @@
-use std::cmp;
-use bevy::prelude::*;
 use crate::game::enemy::events::EnemyShotEvent;
 use crate::game::input::components::InputText;
-use crate::game::player::events::PlayerReloadEvent;
+use crate::game::player::events::{PlayerHealEvent, PlayerReloadEvent};
 use crate::game::word_match::components::{Word, WordTarget};
+use bevy::prelude::*;
+use std::cmp;
 
 //TODO: rewrite to be more efficient
 /**
@@ -14,8 +14,8 @@ pub fn check_matches(
     mut words: Query<(&mut Text, &Word), (With<Word>, Without<InputText>)>,
     mut enemy_event_writer: EventWriter<EnemyShotEvent>,
     mut reload_event_writer: EventWriter<PlayerReloadEvent>,
+    mut heal_event_writer: EventWriter<PlayerHealEvent>,
 ) {
-
     let input_str = input_text.single_mut().sections[0].value.to_string();
     for (mut text, word) in &mut words {
         if input_str.is_empty() {
@@ -31,8 +31,13 @@ pub fn check_matches(
             let mut target_chars = word.1.chars();
 
             for _n in 0..cmp::min(word.1.len(), input_str.len()) {
-                if let (Some(target_char), Some(input_char)) = (target_chars.next(), input_chars.next()) {
-                    if let (Some(target_lower), Some(input_lower)) = (target_char.to_lowercase().next(), input_char.to_lowercase().next()) {
+                if let (Some(target_char), Some(input_char)) =
+                    (target_chars.next(), input_chars.next())
+                {
+                    if let (Some(target_lower), Some(input_lower)) = (
+                        target_char.to_lowercase().next(),
+                        input_char.to_lowercase().next(),
+                    ) {
                         if target_lower == input_lower {
                             completed.push(target_char);
                         } else {
@@ -57,11 +62,14 @@ pub fn check_matches(
             match word.0 {
                 WordTarget::Enemy(id) => {
                     enemy_event_writer.send(EnemyShotEvent(id));
-                },
+                }
                 WordTarget::Reload => {
                     reload_event_writer.send(PlayerReloadEvent);
                 }
-                _ => ()
+                WordTarget::Heal => {
+                    heal_event_writer.send(PlayerHealEvent);
+                }
+                _ => (),
             }
             //TODO: probably should move the below elsewhere so its not edited in two places
             if input_str.len() > word.1.len() {
