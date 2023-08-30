@@ -1,5 +1,6 @@
 use std::cmp;
 use bevy::prelude::*;
+use crate::game::animations::events::CharacterMoveEvent;
 use crate::game::enemy::events::EnemyShotEvent;
 use crate::game::input::components::InputText;
 use crate::game::word_match::components::{Word, WordTarget};
@@ -8,10 +9,12 @@ use crate::game::word_match::components::{Word, WordTarget};
 /**
     Checks for matches between Words and user input
 **/
+#[allow(clippy::type_complexity)]
 pub fn check_matches(
     mut input_text: Query<&mut Text, With<InputText>>,
     mut words: Query<(&mut Text, &Word), (With<Word>, Without<InputText>)>,
-    mut enemy_event_writer: EventWriter<EnemyShotEvent>
+    mut enemy_event_writer: EventWriter<EnemyShotEvent>,
+    mut move_event_writer: EventWriter<CharacterMoveEvent>
 ) {
 
     let input_str = input_text.single_mut().sections[0].value.to_string();
@@ -51,10 +54,15 @@ pub fn check_matches(
         }
 
         if text.sections[1].value.is_empty() {
-            #[allow(clippy::single_match)]
             match word.0 {
                 WordTarget::Enemy(id) => {
                     enemy_event_writer.send(EnemyShotEvent(id));
+                },
+                WordTarget::Move(id) => {
+                    move_event_writer.send(CharacterMoveEvent {
+                        character_id: 0,
+                        target_id: id
+                    });
                 },
                 _ => ()
             }

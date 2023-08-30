@@ -1,104 +1,30 @@
 use bevy::{prelude::*, window::PrimaryWindow};
-use rand::{random, thread_rng, Rng};
+use rand::random;
 
-use crate::components::{AnimationIndices, AnimationTimer};
 use crate::game::animations::components::AnimateSprite;
 use crate::game::enemy::events::EnemyShotEvent;
 use crate::game::enemy::resources::EnemySpawns;
-use crate::game::enemy::{components::*, EnemyAnimations};
+use crate::game::enemy::components::*;
 use crate::game::input::components::InputText;
 use crate::game::level::components::LevelInfo;
 use crate::game::level::events::LevelCompletedEvent;
 use crate::game::player::components::Player;
 use crate::game::player::events::PlayerShotEvent;
-use crate::game::resources::{RandomWord, WordBank};
+use crate::game::resources::{CharacterHandles, RandomWord, WordBank};
 use crate::game::utils::spawn_word;
 use crate::game::word_match::components::{Word, WordTarget};
-use crate::game::{SpriteSheetInfo, WordComplexity};
+use crate::game::WordComplexity;
+use crate::game::animations::components::CharacterAnimations;
 
-use super::resources::{EnemyHandles, EnemySpawnTimer};
+use super::resources::EnemySpawnTimer;
 
 // https://github.com/bevyengine/bevy/blob/main/examples/2d/sprite_sheet.rs
 
-const SOVIET_IDLE: SpriteSheetInfo = SpriteSheetInfo {
-    path: "sprites/soviet_soldier/ppsh_idle.png",
-    x: 128.0,
-    y: 128.0,
-    cols: 10,
-    rows: 1,
-};
-const SOVIET_WALK: SpriteSheetInfo = SpriteSheetInfo {
-    path: "sprites/soviet_soldier/ppsh_walking.png",
-    x: 128.0,
-    y: 128.0,
-    cols: 8,
-    rows: 1,
-};
-const SOVIET_FIRE: SpriteSheetInfo = SpriteSheetInfo {
-    path: "sprites/soviet_soldier/ppsh_firing.png",
-    x: 128.0,
-    y: 128.0,
-    cols: 10,
-    rows: 1,
-};
-const GERMAN_WALK: SpriteSheetInfo = SpriteSheetInfo {
-    path: "sprites/german_soldier/mp40_walking.png",
-    x: 128.0,
-    y: 128.0,
-    cols: 8,
-    rows: 1,
-};
-const GERMAN_FIRE: SpriteSheetInfo = SpriteSheetInfo {
-    path: "sprites/german_soldier/mp40_firing.png",
-    x: 128.0,
-    y: 128.0,
-    cols: 10,
-    rows: 1,
-};
-
 type EnemyBundle = (
     SpriteSheetBundle,
-    AnimationIndices,
-    AnimationTimer,
     AnimateSprite,
     Enemy,
 );
-
-fn get_texture_atlas_handle(
-    cur_sprite: SpriteSheetInfo,
-    asset_server: &Res<AssetServer>,
-    texture_atlases: &mut ResMut<Assets<TextureAtlas>>,
-) -> Handle<TextureAtlas> {
-    let texture_handle = asset_server.load(cur_sprite.path);
-    let texture_atlas = TextureAtlas::from_grid(
-        texture_handle,
-        Vec2::new(cur_sprite.x, cur_sprite.y),
-        cur_sprite.cols,
-        cur_sprite.rows,
-        None,
-        None,
-    );
-    texture_atlases.add(texture_atlas)
-}
-
-/// `Res<EnemyHandles>` contains all enemy sprite sheet handles
-///
-/// When rendering an ememy, clone whichever handle is needed
-pub fn init_texture_atlas_handles(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
-) {
-    let handles = EnemyHandles {
-        soviet_idle: get_texture_atlas_handle(SOVIET_IDLE, &asset_server, &mut texture_atlases),
-        soviet_walk: get_texture_atlas_handle(SOVIET_WALK, &asset_server, &mut texture_atlases),
-        soviet_fire: get_texture_atlas_handle(SOVIET_FIRE, &asset_server, &mut texture_atlases),
-        german_walk: get_texture_atlas_handle(GERMAN_WALK, &asset_server, &mut texture_atlases),
-        german_fire: get_texture_atlas_handle(GERMAN_FIRE, &asset_server, &mut texture_atlases),
-    };
-
-    commands.insert_resource(handles);
-}
 
 /**
     Spawn health bar for enemy
@@ -128,25 +54,21 @@ pub fn despawn_enemies(mut commands: Commands, enemy_q: Query<Entity, With<Enemy
 
 /// All components a newly created Enemy will need
 // TODO: factions?
-fn get_enemy_bundle(x: f32, y: f32, enemy_handles: &Res<EnemyHandles>) -> EnemyBundle {
-    let animation_indices = EnemyAnimations::SovietIdle.get_indices();
-    let mut rng = thread_rng();
+fn get_enemy_bundle(x: f32, y: f32, character_handles: &Res<CharacterHandles>) -> EnemyBundle {
 
     (
         SpriteSheetBundle {
-            texture_atlas: enemy_handles.soviet_idle.clone(),
+            texture_atlas: character_handles.soviet_idle.clone(),
             sprite: TextureAtlasSprite {
-                index: rng.gen_range(animation_indices.0..animation_indices.1),
+                index: 0,
                 flip_x: true,
                 ..default()
             },
             transform: Transform::from_xyz(x, y, 1.),
             ..default()
         },
-        animation_indices,
-        EnemyAnimations::SovietIdle.get_timer(),
-        AnimateSprite,
-        Enemy::default(),
+        CharacterAnimations::SovietIdle.get_animation(),
+        Enemy::default()
     )
 }
 
@@ -157,19 +79,20 @@ pub fn spawn_initial_enemies(
     mut word_bank: ResMut<WordBank>,
     word_q: Query<&Word, (With<Word>, Without<InputText>)>,
     enemy_spawn: Res<EnemySpawns>,
-    enemy_handles: Res<EnemyHandles>,
+    character_handles: Res<CharacterHandles>
 ) {
     println!("Spawning initial enemies");
     let font = asset_server.load("fonts/fyodor/truetype/Fyodor-BoldCondensed.ttf");
     for pos in enemy_spawn.enemies.as_slice() {
         commands
-            .spawn(get_enemy_bundle(pos.x, pos.y, &enemy_handles))
+            .spawn(get_enemy_bundle(pos.x, pos.y, &character_handles))
             .with_children(|builder| {
                 spawn_health_bar(builder);
                 spawn_word(
                     builder,
                     word_bank.get_word(WordComplexity::Medium, &word_q).as_str(),
                     &font,
+                    WordTarget::Enemy(builder.parent_entity().index())
                 );
             });
     }
@@ -201,7 +124,7 @@ pub fn spawn_enemies_gradually(
     win_q: Query<&Window, With<PrimaryWindow>>,
     asset_server: Res<AssetServer>,
     mut enemy_spawn_timer: ResMut<EnemySpawnTimer>,
-    enemy_handles: Res<EnemyHandles>,
+    character_handles: Res<CharacterHandles>,
     mut word_bank: ResMut<WordBank>,
     word_q: Query<&Word, (With<Word>, Without<InputText>)>,
     time: Res<Time>,
@@ -222,13 +145,14 @@ pub fn spawn_enemies_gradually(
             -random::<f32>() * win.height() / 2.
         };
         commands
-            .spawn(get_enemy_bundle(random_x, random_y, &enemy_handles))
+            .spawn(get_enemy_bundle(random_x, random_y, &character_handles))
             .with_children(|builder| {
                 spawn_health_bar(builder);
                 spawn_word(
                     builder,
                     word_bank.get_word(WordComplexity::Medium, &word_q).as_str(),
                     &font,
+                    WordTarget::Enemy(builder.parent_entity().index())
                 );
             });
     }
@@ -268,6 +192,7 @@ pub fn catch_shot_event(
                                 builder,
                                 word_bank.get_word(WordComplexity::Medium, &word_q).as_str(),
                                 &font.clone(),
+                                WordTarget::Enemy(builder.parent_entity().index())
                             );
                         });
                         //TODO: better way to get the child sprite/transform than this?
@@ -291,10 +216,11 @@ pub fn catch_shot_event(
 }
 
 /// Enemy changes sprite sheet to shooting and triggers shot event
+#[allow(clippy::type_complexity)]
 pub fn enemy_shoot_player(
     mut commands: Commands,
     mut enemy_q: Query<(Entity, &Transform), (With<Enemy>, Without<Firing>)>,
-    enemy_handles: Res<EnemyHandles>,
+    character_handles: Res<CharacterHandles>,
     mut enemy_shot_player_event_writer: EventWriter<PlayerShotEvent>,
     player_q: Query<&Transform, With<Player>>,
     win_q: Query<&Window, With<PrimaryWindow>>,
@@ -313,7 +239,7 @@ pub fn enemy_shoot_player(
                     println!("<< shot >>");
                     commands.entity(enemy_entity).insert((
                         SpriteSheetBundle {
-                            texture_atlas: enemy_handles.soviet_fire.clone(),
+                            texture_atlas: character_handles.soviet_fire.clone(),
                             sprite: TextureAtlasSprite {
                                 flip_x: true,
                                 ..default()
@@ -321,8 +247,7 @@ pub fn enemy_shoot_player(
                             transform: *enemy_transform,
                             ..default()
                         },
-                        EnemyAnimations::SovietFire.get_indices(),
-                        EnemyAnimations::SovietFire.get_timer(),
+                        CharacterAnimations::SovietFire.get_animation(),
                         Firing::default(),
                     ));
                     enemy_shot_player_event_writer.send(PlayerShotEvent);
@@ -335,12 +260,14 @@ pub fn enemy_shoot_player(
 /// Ticks enemy Firing timer until finished
 ///
 /// When finished revert to base animation
+#[allow(clippy::type_complexity)]
 pub fn tick_and_replace_enemy_fire_timer(
     mut commands: Commands,
     mut firing_q: Query<(Entity, &mut Firing, &Transform), (With<Firing>, With<Enemy>)>,
-    enemy_handles: Res<EnemyHandles>,
+    character_handles: Res<CharacterHandles>,
     time: Res<Time>,
 ) {
+    //TODO: generify?
     for (enemy_entity, mut firing, transform) in firing_q.iter_mut() {
         firing.timer.tick(time.delta());
         if firing.timer.just_finished() {
@@ -348,7 +275,7 @@ pub fn tick_and_replace_enemy_fire_timer(
             // inserting this replaces the old one
             commands.entity(enemy_entity).insert((
                 SpriteSheetBundle {
-                    texture_atlas: enemy_handles.soviet_idle.clone(),
+                    texture_atlas: character_handles.soviet_idle.clone(),
                     sprite: TextureAtlasSprite {
                         flip_x: true,
                         ..default()
@@ -356,8 +283,7 @@ pub fn tick_and_replace_enemy_fire_timer(
                     transform: *transform,
                     ..default()
                 },
-                EnemyAnimations::SovietIdle.get_indices(),
-                EnemyAnimations::SovietIdle.get_timer(),
+                CharacterAnimations::SovietIdle.get_animation(),
             ));
         }
     }

@@ -1,4 +1,11 @@
 use bevy::{prelude::*, window::PrimaryWindow};
+use crate::game::input::components::InputText;
+use crate::game::level::components::BarrierPoint;
+use crate::game::level::events::SpawnBarriersEvent;
+use crate::game::resources::{RandomWord, WordBank};
+use crate::game::utils::spawn_word;
+use crate::game::word_match::components::{Word, WordTarget};
+use crate::game::WordComplexity;
 
 use super::{
     components::{LevelInfo, RenderedTile, TiledMap},
@@ -11,14 +18,14 @@ pub fn setup_levels(mut commands: Commands) {
     commands.spawn(LevelInfo {
         map: "assets/maps/level_01.json".to_string(),
         spawn_rate: 10.0,
-        enemies: vec![Vec2::new(0., -128.), Vec2::new(0., 128.), Vec2::new(0., 256.), Vec2::new(0., 600.), Vec2::new(700., 256.), Vec2::new(750., 300.)],
+        enemies: vec![Vec2::new(0., -128.), Vec2::new(0., 128.), Vec2::new(0., 256.), Vec2::new(0., 600.), Vec2::new(700., 256.), Vec2::new(750., 300.)]
     });
 
     // Lv 2
     commands.spawn(LevelInfo {
         map: "assets/maps/level_02.json".to_string(),
         spawn_rate: 3.0,
-        enemies: vec![Vec2::new(0., 0.)],
+        enemies: vec![Vec2::new(0., 0.)]
     });
 }
 
@@ -44,6 +51,7 @@ fn parse_tiled_map(map_path: &str) -> Result<TiledMap, Box<dyn std::error::Error
     serde_json::from_str(&map_json).map_err(|err| Box::new(err) as Box<dyn std::error::Error>)
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn render_level_data(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
@@ -52,7 +60,10 @@ pub fn render_level_data(
     level_info_q: Query<&LevelInfo>,
     rendered_map_q: Query<Entity, With<RenderedTile>>,
     win_q: Query<&Window, With<PrimaryWindow>>,
+    mut word_bank: ResMut<WordBank>,
+    word_q: Query<&Word, (With<Word>, Without<InputText>)>
 ) {
+    let font = asset_server.load("fonts/fyodor/truetype/Fyodor-BoldCondensed.ttf");
     for level in level_complete_event_reader.iter() {
         // clear out old map
         rendered_map_q.iter().for_each(|map| {
@@ -111,6 +122,33 @@ pub fn render_level_data(
             }
 
             commands.spawn_batch(bundles);
+
+            let mut barrier_id: u32 = 0;
+            for group_id in 0..map_data.barriers.len() {
+                println!("spawning group {}", group_id);
+                let barrier_set = &map_data.barriers[group_id];
+                for barrier in barrier_set {
+                    let mut entity_commands = commands.spawn((SpriteBundle {
+                        sprite: Sprite {
+                            color: Color::BLACK,
+                            custom_size: Some(Vec2::new(20., 100.)),
+                            ..default()
+                        },
+                        transform: Transform::from_translation(Vec3::new(barrier.x, barrier.y, 1.)),
+                        ..default()
+                    }, BarrierPoint {
+                        group_id: group_id as u32,
+                        id: barrier_id
+                    }
+                    ));
+                    if group_id == 0 {
+                        entity_commands.with_children(|builder| {
+                            spawn_word(builder, word_bank.get_word(WordComplexity::Easy, &word_q).as_str(), &font, WordTarget::Move(barrier_id));
+                        });
+                    }
+                    barrier_id += 1;
+                }
+            }
         }
     }
 }
@@ -119,4 +157,31 @@ pub fn clear_map(mut commands: Commands, rendered_map_q: Query<Entity, With<Rend
     rendered_map_q.iter().for_each(|map| {
         commands.entity(map).despawn();
     });
+}
+
+pub fn catch_spawn_barriers_event(
+    mut commands: Commands,
+    mut word_bank: ResMut<WordBank>,
+    word_q: Query<&Word, (With<Word>, Without<InputText>)>,
+    asset_server: Res<AssetServer>,
+    mut barrier_spawn_reader: EventReader<SpawnBarriersEvent>,
+    mut barrier_q: Query<(Entity, &BarrierPoint, Option<&Children>), With<BarrierPoint>>) {
+
+    let font = asset_server.load("fonts/fyodor/truetype/Fyodor-BoldCondensed.ttf");
+
+    for barrier_event in barrier_spawn_reader.iter() {
+        for (entity, barrier_point, children_opt) in barrier_q.iter_mut() {
+            if barrier_point.group_id == barrier_event.0 {
+                if let Some(children) = children_opt {
+                    if let Some(child) = children.get(0) {
+                        commands.entity(*child).despawn_recursive();
+                    }
+                }
+            } else if barrier_point.group_id == barrier_event.0 + 1 {
+                commands.entity(entity).with_children(|builder| {
+                    spawn_word(builder, word_bank.get_word(WordComplexity::Easy, &word_q).as_str(), &font, WordTarget::Move(barrier_point.id));
+                });
+            }
+        }
+    }
 }
