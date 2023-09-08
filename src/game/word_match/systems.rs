@@ -1,5 +1,6 @@
 use crate::game::enemy::events::EnemyShotEvent;
 use crate::game::input::components::InputText;
+use crate::game::player::components::Player;
 use crate::game::player::events::{PlayerHealEvent, PlayerReloadEvent};
 use crate::game::word_match::components::{Word, WordTarget};
 use bevy::prelude::*;
@@ -15,6 +16,7 @@ pub fn check_matches(
     mut enemy_event_writer: EventWriter<EnemyShotEvent>,
     mut reload_event_writer: EventWriter<PlayerReloadEvent>,
     mut heal_event_writer: EventWriter<PlayerHealEvent>,
+    player_q: Query<&Player>,
 ) {
     let input_str = input_text.single_mut().sections[0].value.to_string();
     for (mut text, word) in &mut words {
@@ -61,7 +63,12 @@ pub fn check_matches(
             #[allow(clippy::single_match)]
             match word.0 {
                 WordTarget::Enemy(id) => {
-                    enemy_event_writer.send(EnemyShotEvent(id));
+                    if let Ok(player) = player_q.get_single() {
+                        // TODO: eventually check if ammo > gun's ammo consumption per shot
+                        if player.ammo.0 > 0 {
+                            enemy_event_writer.send(EnemyShotEvent(id));
+                        }
+                    }
                 }
                 WordTarget::Reload => {
                     reload_event_writer.send(PlayerReloadEvent);

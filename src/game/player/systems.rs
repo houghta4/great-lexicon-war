@@ -13,7 +13,6 @@ use super::{
 pub const _PLAYER_SIZE: f32 = 64.0;
 pub const _PLAYER_SPEED: f32 = 500.0;
 pub const PLAYER_DAMAGE: f32 = 15.0;
-pub const PLAYER_HEAL: f32 = 25.0;
 
 /// Spawn `Player` entity
 pub fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>) {
@@ -97,12 +96,8 @@ pub fn player_heal(
             if player.health_packs > 0 {
                 player.health_packs -= 1;
 
-                println!("healing!");
-                if player.health + PLAYER_HEAL > 100.0 {
-                    player.health = 100.0;
-                } else {
-                    player.health += 25.;
-                }
+                // full heal
+                player.health = 100.0;
             }
         }
     }

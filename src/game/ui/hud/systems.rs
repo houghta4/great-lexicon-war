@@ -400,14 +400,6 @@ pub fn update_reload_word(
     }
 }
 
-/// Remove `WordTarget::Reload` after reloading
-pub fn remove_reload_word(mut reload_q: Query<(&mut Text, &mut Word), With<ReloadText>>) {
-    if let Ok((mut text, mut word)) = reload_q.get_single_mut() {
-        text.sections[1].value = " ".to_owned();
-        word.1 = " ".to_owned();
-    }
-}
-
 /// Change the HUD health bar's width and color depending on the health of the player
 pub fn update_health_bar(
     mut style_q: Query<(&mut Style, &mut BackgroundColor), With<PlayerHealthBar>>,
@@ -425,6 +417,11 @@ pub fn update_health_bar(
                     style.width = style
                         .width
                         .try_sub(Val::Percent(0.4))
+                        .unwrap_or(style.width);
+                } else if p + 0.4 < player.health {
+                    style.width = style
+                        .width
+                        .try_add(Val::Percent(0.4))
                         .unwrap_or(style.width);
                 }
             }
@@ -471,21 +468,14 @@ pub fn update_heal_word(
 ) {
     if let Ok(player) = player_q.get_single() {
         if let Ok((mut text, mut word)) = heal_q.get_single_mut() {
-            // do not refresh word if mid way thru typing it
-            if text.sections[0].value.is_empty() && player.health_packs > 0 {
-                let w = word_bank.get_word(WordComplexity::Medium, &word_q);
-                text.sections[1].value = w.to_owned();
-                word.1 = w.to_owned();
+            let w = word_bank.get_word(WordComplexity::Medium, &word_q);
+            text.sections[1].value = w.to_owned();
+            word.1 = w.to_owned();
+
+            if player.health_packs == 0 {
+                text.sections[1].style.color = Color::RED;
             }
         }
-    }
-}
-
-/// Remove `WordTarget::Heal` after reloading
-pub fn remove_heal_word(mut heal_q: Query<(&mut Text, &mut Word), With<HealText>>) {
-    if let Ok((mut text, mut word)) = heal_q.get_single_mut() {
-        text.sections[1].value = " ".to_owned();
-        word.1 = " ".to_owned();
     }
 }
 
