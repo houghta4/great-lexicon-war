@@ -1,5 +1,3 @@
-use std::cmp;
-use bevy::prelude::*;
 use crate::game::animations::events::CharacterMoveEvent;
 use crate::game::enemy::events::EnemyShotEvent;
 use crate::game::input::components::InputText;
