@@ -83,8 +83,7 @@ pub fn check_matches(
                         character_id: 0,
                         target_id: id
                     });
-                },
-                _ => ()
+                }
             }
             //TODO: probably should move the below elsewhere so its not edited in two places
             if input_str.len() > word.1.len() {
