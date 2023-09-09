@@ -1,7 +1,9 @@
 mod components;
+mod layout;
 mod systems;
 
 use crate::game::player::events::{PlayerHealEvent, PlayerReloadEvent};
+use crate::game::ui::hud::layout::*;
 use crate::game::ui::hud::systems::*;
 use crate::game::{InGameRunning, InGameState};
 use crate::AppState;
