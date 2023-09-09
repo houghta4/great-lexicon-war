@@ -27,7 +27,7 @@ pub fn spawn_player(mut commands: Commands, character_handles: Res<CharacterHand
             ..default()
         },
         CharacterAnimations::SovietIdle.get_animation(),
-        Player,
+        Player::default(),
         MovableCharacter {
             id: 0,
             move_target: None,
