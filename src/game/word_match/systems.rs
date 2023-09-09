@@ -1,3 +1,6 @@
+use std::cmp;
+use bevy::prelude::*;
+use crate::game::animations::events::CharacterMoveEvent;
 use crate::game::enemy::events::EnemyShotEvent;
 use crate::game::input::components::InputText;
 use crate::game::player::components::Player;
@@ -10,6 +13,7 @@ use std::cmp;
 /**
     Checks for matches between Words and user input
 **/
+#[allow(clippy::type_complexity)]
 pub fn check_matches(
     mut input_text: Query<&mut Text, With<InputText>>,
     mut words: Query<(&mut Text, &Word), (With<Word>, Without<InputText>)>,
@@ -17,6 +21,7 @@ pub fn check_matches(
     mut reload_event_writer: EventWriter<PlayerReloadEvent>,
     mut heal_event_writer: EventWriter<PlayerHealEvent>,
     player_q: Query<&Player>,
+    mut move_event_writer: EventWriter<CharacterMoveEvent>
 ) {
     let input_str = input_text.single_mut().sections[0].value.to_string();
     for (mut text, word) in &mut words {
@@ -60,7 +65,6 @@ pub fn check_matches(
         }
 
         if text.sections[1].value.is_empty() {
-            #[allow(clippy::single_match)]
             match word.0 {
                 WordTarget::Enemy(id) => {
                     if let Ok(player) = player_q.get_single() {
@@ -76,7 +80,13 @@ pub fn check_matches(
                 WordTarget::Heal => {
                     heal_event_writer.send(PlayerHealEvent);
                 }
-                _ => (),
+                WordTarget::Move(id) => {
+                    move_event_writer.send(CharacterMoveEvent {
+                        character_id: 0,
+                        target_id: id
+                    });
+                },
+                _ => ()
             }
             //TODO: probably should move the below elsewhere so its not edited in two places
             if input_str.len() > word.1.len() {

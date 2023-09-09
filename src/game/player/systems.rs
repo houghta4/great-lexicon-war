@@ -1,6 +1,6 @@
 use bevy::prelude::*;
-
-// use crate::game::animations::components::AnimateSprite;
+use crate::game::animations::components::{CharacterAnimations, MovableCharacter};
+use crate::game::resources::CharacterHandles;
 
 use crate::game::enemy::events::EnemyShotEvent;
 
@@ -15,15 +15,24 @@ pub const _PLAYER_SPEED: f32 = 500.0;
 pub const PLAYER_DAMAGE: f32 = 15.0;
 
 /// Spawn `Player` entity
-pub fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>) {
+pub fn spawn_player(mut commands: Commands, character_handles: Res<CharacterHandles>) {
     commands.spawn((
-        SpriteBundle {
+        SpriteSheetBundle {
+            texture_atlas: character_handles.soviet_idle.clone(),
+            sprite: TextureAtlasSprite {
+                index: 0,
+                ..default()
+            },
             transform: Transform::from_xyz(0., 0., 1.0),
-            texture: asset_server.load("sprites/player_01.png"),
             ..default()
         },
-        // AnimateSprite, // player is not using sprite sheet, but will need one eventually!
-        Player::default(),
+        CharacterAnimations::SovietIdle.get_animation(),
+        Player,
+        MovableCharacter {
+            id: 0,
+            move_target: None,
+            move_timer: Timer::from_seconds(0.0375, TimerMode::Repeating)
+        }
     ));
     println!("Spawned player.");
 }

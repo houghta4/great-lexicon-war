@@ -5,12 +5,50 @@ use std::{
     fs::File,
     io::{BufRead, BufReader},
 };
+use crate::game::resources::CharacterHandles;
+use crate::game::SpriteSheetInfo;
 
 use super::{
     input::components::InputText,
     resources::{RandomWord, WordBank},
     word_match::components::Word,
     InGameState, WordComplexity,
+};
+
+const SOVIET_IDLE: SpriteSheetInfo = SpriteSheetInfo {
+    path: "sprites/soviet_soldier/ppsh_idle.png",
+    x: 128.0,
+    y: 128.0,
+    cols: 10,
+    rows: 1,
+};
+const SOVIET_WALK: SpriteSheetInfo = SpriteSheetInfo {
+    path: "sprites/soviet_soldier/ppsh_walking.png",
+    x: 128.0,
+    y: 128.0,
+    cols: 8,
+    rows: 1,
+};
+const SOVIET_FIRE: SpriteSheetInfo = SpriteSheetInfo {
+    path: "sprites/soviet_soldier/ppsh_firing.png",
+    x: 128.0,
+    y: 128.0,
+    cols: 10,
+    rows: 1,
+};
+const GERMAN_WALK: SpriteSheetInfo = SpriteSheetInfo {
+    path: "sprites/german_soldier/mp40_walking.png",
+    x: 128.0,
+    y: 128.0,
+    cols: 8,
+    rows: 1,
+};
+const GERMAN_FIRE: SpriteSheetInfo = SpriteSheetInfo {
+    path: "sprites/german_soldier/mp40_firing.png",
+    x: 128.0,
+    y: 128.0,
+    cols: 10,
+    rows: 1,
 };
 
 pub fn insert_word_bank(mut commands: Commands) {
@@ -53,6 +91,42 @@ pub fn insert_word_bank(mut commands: Commands) {
     word_bank.extreme.shuffle(&mut rng);
 
     commands.insert_resource(word_bank);
+}
+
+/**
+    Inits all texture handles for all character sprite sheets
+**/
+pub fn init_texture_atlas_handles(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
+) {
+    let handles = CharacterHandles {
+        soviet_idle: get_texture_atlas_handle(SOVIET_IDLE, &asset_server, &mut texture_atlases),
+        soviet_walk: get_texture_atlas_handle(SOVIET_WALK, &asset_server, &mut texture_atlases),
+        soviet_fire: get_texture_atlas_handle(SOVIET_FIRE, &asset_server, &mut texture_atlases),
+        german_walk: get_texture_atlas_handle(GERMAN_WALK, &asset_server, &mut texture_atlases),
+        german_fire: get_texture_atlas_handle(GERMAN_FIRE, &asset_server, &mut texture_atlases),
+    };
+
+    commands.insert_resource(handles);
+}
+
+fn get_texture_atlas_handle(
+    cur_sprite: SpriteSheetInfo,
+    asset_server: &Res<AssetServer>,
+    texture_atlases: &mut ResMut<Assets<TextureAtlas>>,
+) -> Handle<TextureAtlas> {
+    let texture_handle = asset_server.load(cur_sprite.path);
+    let texture_atlas = TextureAtlas::from_grid(
+        texture_handle,
+        Vec2::new(cur_sprite.x, cur_sprite.y),
+        cur_sprite.cols,
+        cur_sprite.rows,
+        None,
+        None,
+    );
+    texture_atlases.add(texture_atlas)
 }
 
 pub fn test_words(

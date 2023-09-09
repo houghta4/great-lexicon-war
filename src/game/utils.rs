@@ -4,7 +4,7 @@ use bevy::prelude::*;
 /**
     Spawn a given word for a given entity, with a black background for contrast
 **/
-pub fn spawn_word(builder: &mut ChildBuilder, word: &str, font: &Handle<Font>) {
+pub fn spawn_word(builder: &mut ChildBuilder, word: &str, font: &Handle<Font>, word_target: WordTarget) {
     builder
         .spawn((
             Text2dBundle {
@@ -27,7 +27,7 @@ pub fn spawn_word(builder: &mut ChildBuilder, word: &str, font: &Handle<Font>) {
                 ..default()
             },
             Word(
-                WordTarget::Enemy(builder.parent_entity().index()),
+                word_target,
                 word.to_string(),
             ),
         ))

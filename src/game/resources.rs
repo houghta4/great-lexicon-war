@@ -18,6 +18,15 @@ pub struct WordBank {
     extreme_ptr: usize,
 }
 
+#[derive(Resource, Default)]
+pub struct CharacterHandles {
+    pub soviet_idle: Handle<TextureAtlas>,
+    pub soviet_walk: Handle<TextureAtlas>,
+    pub soviet_fire: Handle<TextureAtlas>,
+    pub german_walk: Handle<TextureAtlas>,
+    pub german_fire: Handle<TextureAtlas>
+}
+
 pub trait RandomWord {
     fn get_word<T: Component>(
         &mut self,

@@ -39,7 +39,7 @@ impl Plugin for InGamePlugin {
                     .run_if(in_state(InGameState::Running)),
             )
             // Resource inserted on app Startup
-            .add_systems(Startup, insert_word_bank)
+            .add_systems(Startup, (insert_word_bank, init_texture_atlas_handles))
             // States
             .add_state::<InGameState>()
             // On enter state
@@ -91,3 +91,4 @@ pub enum WordComplexity {
     Hard,
     Extreme,
 }
+
