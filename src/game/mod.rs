@@ -9,8 +9,8 @@ mod player;
 mod resources;
 mod systems;
 mod ui;
-mod word_match;
 mod utils;
+mod word_match;
 
 use animations::AnimationPlugin;
 use camera::CameraPlugin;
@@ -31,6 +31,13 @@ pub struct InGamePlugin;
 impl Plugin for InGamePlugin {
     fn build(&self, app: &mut App) {
         app
+            // System sets
+            .configure_set(
+                Update,
+                InGameRunning
+                    .run_if(in_state(AppState::InGame))
+                    .run_if(in_state(InGameState::Running)),
+            )
             // Resource inserted on app Startup
             .add_systems(Startup, (insert_word_bank, init_texture_atlas_handles))
             // States
@@ -56,6 +63,12 @@ impl Plugin for InGamePlugin {
             .add_systems(OnExit(AppState::InGame), resume_game);
     }
 }
+/// All systems that run while in states AppState::InGame and InGameState::Running should belong to this set
+///
+/// # Example
+/// `app.add_systems(<schedule>, <systems>.in_set(InGameRunning))`
+#[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
+pub struct InGameRunning;
 
 #[derive(States, Debug, Clone, Copy, Eq, PartialEq, Hash, Default)]
 pub enum InGameState {

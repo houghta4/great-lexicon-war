@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use rand::{seq::SliceRandom, thread_rng};
 
-use super::{input::components::InputText, word_match::components::Word, WordComplexity};
+use super::{word_match::components::Word, WordComplexity};
 
 /// Collection of words to choose from at "random"
 ///
@@ -28,18 +28,18 @@ pub struct CharacterHandles {
 }
 
 pub trait RandomWord {
-    fn get_word(
+    fn get_word<T: Component>(
         &mut self,
         complexity: WordComplexity,
-        word_query: &Query<&Word, (With<Word>, Without<InputText>)>,
+        word_query: &Query<&Word, (With<Word>, Without<T>)>,
     ) -> String;
 }
 
 impl RandomWord for WordBank {
-    fn get_word(
+    fn get_word<T: Component>(
         &mut self,
         complexity: WordComplexity,
-        word_q: &Query<&Word, (With<Word>, Without<InputText>)>,
+        word_q: &Query<&Word, (With<Word>, Without<T>)>,
     ) -> String {
         let mut random_word = match complexity {
             WordComplexity::Easy => self.get_easy_word(),

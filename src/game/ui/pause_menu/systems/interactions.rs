@@ -1,13 +1,13 @@
 use bevy::prelude::*;
 
+use crate::game::ui::styles::{HOVERED_BUTTON, NORMAL_BUTTON, PRESSED_BUTTON};
 use crate::{
     game::{
-        ui::pause_menu::{components::{QuitButton, ResumeButton}},
+        ui::pause_menu::components::{QuitButton, ResumeButton},
         InGameState,
     },
     AppState,
 };
-use crate::game::ui::styles::{HOVERED_BUTTON, NORMAL_BUTTON, PRESSED_BUTTON};
 
 type ChangedWith<T> = (Changed<Interaction>, With<T>);
 
