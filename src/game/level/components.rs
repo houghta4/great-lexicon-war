@@ -8,14 +8,36 @@ pub struct LevelInfo {
     pub enemies: Vec<Vec2>
 }
 
-#[derive(Default, Component, Debug, Deserialize, Serialize)]
+#[derive(Component, Serialize, Deserialize)]
+pub struct Tileset {
+    pub size: f32,
+    pub columns: usize,
+    pub rows: usize
+}
+
+#[derive(Component, Serialize, Deserialize)]
+pub struct MapObject {
+    pub class: MapObjectClass,
+    pub id: usize,
+    pub x: f32,
+    pub y: f32
+}
+
+#[derive(Serialize, Deserialize)]
+pub enum MapObjectClass {
+    Barrier(u32),
+    Tree,
+    Stone
+}
+
+#[derive(Default, Component, Deserialize, Serialize)]
 pub struct TiledMap {
     pub width: u32,
     pub height: u32,
     pub tilewidth: u32,
     pub tileheight: u32,
     pub layers: Vec<TiledLayer>,
-    pub barriers: Vec<Vec<Coordinate>>
+    pub objects: Vec<MapObject>
 }
 
 #[derive(Component, Debug, Deserialize, Serialize)]

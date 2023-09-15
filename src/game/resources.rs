@@ -24,7 +24,8 @@ pub struct CharacterHandles {
     pub soviet_walk: Handle<TextureAtlas>,
     pub soviet_fire: Handle<TextureAtlas>,
     pub german_walk: Handle<TextureAtlas>,
-    pub german_fire: Handle<TextureAtlas>
+    pub german_fire: Handle<TextureAtlas>,
+    pub barrier: Handle<TextureAtlas>
 }
 
 pub trait RandomWord {

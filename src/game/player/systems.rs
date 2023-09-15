@@ -1,8 +1,7 @@
 use bevy::prelude::*;
 use crate::game::animations::components::{CharacterAnimations, MovableCharacter};
-use crate::game::resources::CharacterHandles;
-
 use crate::game::enemy::events::EnemyShotEvent;
+use crate::game::resources::CharacterHandles;
 
 use super::{
     components::*,
@@ -23,7 +22,7 @@ pub fn spawn_player(mut commands: Commands, character_handles: Res<CharacterHand
                 index: 0,
                 ..default()
             },
-            transform: Transform::from_xyz(0., 0., 1.0),
+            transform: Transform::from_xyz(0., 0., 3.0),
             ..default()
         },
         CharacterAnimations::SovietIdle.get_animation(),
