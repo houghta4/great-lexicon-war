@@ -4,6 +4,9 @@ mod game;
 mod game_over;
 mod main_menu;
 mod systems;
+mod utils;
+mod level_completed;
+mod styles;
 
 use bevy::{
     prelude::*,
@@ -11,6 +14,7 @@ use bevy::{
 };
 use game::InGamePlugin;
 use systems::*;
+use crate::level_completed::LevelCompletedPlugin;
 
 fn main() {
     println!("\n<< ---------Dev Commands--------- >>");
@@ -40,7 +44,7 @@ fn main() {
         //States
         .add_state::<AppState>()
         // Custom plugins
-        .add_plugins(InGamePlugin)
+        .add_plugins((InGamePlugin, LevelCompletedPlugin))
         // Startup Systems
         .add_systems(Startup, spawn_camera)
         .run();
@@ -54,4 +58,5 @@ pub enum AppState {
     #[default]
     InGame, // inside Game plug in have Running and Paused states
     GameOver,
+    LevelCompleted
 }

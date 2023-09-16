@@ -175,7 +175,8 @@ pub fn toggle_game_state(
             }
             InGameState::Paused => {
                 next_game_state.set(InGameState::Running);
-            }
+            },
+            _ => {}
         }
     }
 }

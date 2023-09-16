@@ -5,7 +5,6 @@ use self::pause_menu::PauseMenuPlugin;
 
 mod hud;
 mod pause_menu;
-mod styles;
 
 pub struct GameUIPlugin;
 

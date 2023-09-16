@@ -1,7 +1,10 @@
 use bevy::prelude::Event;
 
 #[derive(Event)]
-pub struct LevelCompletedEvent(pub usize);
+pub struct LevelInitEvent(pub usize);
 
 #[derive(Event)]
-pub struct SpawnBarriersEvent(pub u32);
+pub struct LevelCompletedEvent;
+
+#[derive(Event)]
+pub struct SpawnMovePointsEvent(pub u32);

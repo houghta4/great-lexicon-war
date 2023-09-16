@@ -7,7 +7,7 @@ use crate::game::enemy::resources::EnemySpawns;
 use crate::game::enemy::components::*;
 use crate::game::input::components::InputText;
 use crate::game::level::components::LevelInfo;
-use crate::game::level::events::LevelCompletedEvent;
+use crate::game::level::events::LevelInitEvent;
 use crate::game::player::components::Player;
 use crate::game::player::events::PlayerShotEvent;
 use crate::game::resources::{CharacterHandles, RandomWord, WordBank};
@@ -102,9 +102,9 @@ pub fn spawn_initial_enemies(
 pub fn init_enemy_level_info(
     mut commands: Commands,
     level_info_q: Query<&LevelInfo>,
-    mut level_complete_event_reader: EventReader<LevelCompletedEvent>,
+    mut level_init_event_reader: EventReader<LevelInitEvent>,
 ) {
-    for level in level_complete_event_reader.iter() {
+    for level in level_init_event_reader.iter() {
         if let Some(level_info) = level_info_q.iter().nth(level.0) {
             println!("Inserting resources");
             commands.insert_resource(EnemySpawnTimer {

@@ -2,9 +2,10 @@ use bevy::prelude::*;
 
 use crate::game::{
     input::components::InputText,
-    ui::styles::{BACKGROUND_COLOR, SECTION_BACKGROUND_COLOR},
     word_match::components::{Word, WordTarget},
 };
+use crate::game::ui::hud::components::Hud;
+use crate::styles::{BACKGROUND_COLOR, SECTION_BACKGROUND_COLOR};
 
 use super::{
     components::{
@@ -13,19 +14,28 @@ use super::{
     systems::get_health_bundle,
 };
 
+pub fn despawn_ui(mut commands: Commands, hud_q: Query<Entity, With<Hud>>) {
+    if let Ok(hud) = hud_q.get_single() {
+        commands.entity(hud).despawn_recursive();
+    }
+}
+
 pub fn spawn_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
     let font: Handle<Font> = asset_server.load("fonts/propaganda/propaganda.ttf");
 
     commands
-        .spawn(NodeBundle {
-            style: Style {
-                width: Val::Percent(100.0),
-                height: Val::Percent(100.0),
-                flex_direction: FlexDirection::Column,
+        .spawn((
+            NodeBundle {
+                style: Style {
+                    width: Val::Percent(100.0),
+                    height: Val::Percent(100.0),
+                    flex_direction: FlexDirection::Column,
+                    ..default()
+                },
                 ..default()
             },
-            ..default()
-        })
+            Hud
+        ))
         .with_children(|builder| {
             builder
                 .spawn(NodeBundle {

@@ -34,16 +34,6 @@ pub fn get_title_text_style(asset_server: &Res<AssetServer>) -> TextStyle {
     }
 }
 
-pub fn get_button_style(width: f32, height: f32) -> Style {
-    Style {
-        width: Val::Px(width),
-        height: Val::Px(height),
-        justify_content: JustifyContent::Center,
-        align_items: AlignItems::Center,
-        ..default()
-    }
-}
-
 pub fn get_button_text_style(asset_server: &Res<AssetServer>) -> TextStyle {
     TextStyle {
         font: asset_server.load("fonts/propaganda/propaganda.ttf"),

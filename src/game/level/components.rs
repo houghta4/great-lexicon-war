@@ -26,6 +26,7 @@ pub struct MapObject {
 #[derive(Serialize, Deserialize)]
 pub enum MapObjectClass {
     Barrier(u32),
+    Objective(u32),
     Tree,
     Stone
 }
@@ -47,7 +48,7 @@ pub struct TiledLayer {
 }
 
 #[derive(Component)]
-pub struct BarrierPoint {
+pub struct MovePoint {
     pub group_id: u32,
     pub id: u32
 }

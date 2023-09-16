@@ -1,6 +1,5 @@
 use bevy::prelude::*;
 
-use crate::game::ui::styles::{HOVERED_BUTTON, NORMAL_BUTTON, PRESSED_BUTTON};
 use crate::{
     game::{
         ui::pause_menu::components::{QuitButton, ResumeButton},
@@ -8,8 +7,8 @@ use crate::{
     },
     AppState,
 };
-
-type ChangedWith<T> = (Changed<Interaction>, With<T>);
+use crate::styles::{HOVERED_BUTTON, NORMAL_BUTTON, PRESSED_BUTTON};
+use crate::utils::ChangedWith;
 
 pub fn interact_with_resume_button(
     mut button_q: Query<(&Interaction, &mut BackgroundColor), ChangedWith<ResumeButton>>,
