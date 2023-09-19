@@ -14,6 +14,7 @@ use bevy::{
 };
 use game::InGamePlugin;
 use systems::*;
+use crate::game_over::GameOverPlugin;
 use crate::level_completed::LevelCompletedPlugin;
 
 fn main() {
@@ -44,7 +45,7 @@ fn main() {
         //States
         .add_state::<AppState>()
         // Custom plugins
-        .add_plugins((InGamePlugin, LevelCompletedPlugin))
+        .add_plugins((InGamePlugin, LevelCompletedPlugin, GameOverPlugin))
         // Startup Systems
         .add_systems(Startup, spawn_camera)
         .run();
