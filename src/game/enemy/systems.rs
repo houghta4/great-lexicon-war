@@ -58,7 +58,7 @@ fn get_enemy_bundle(x: f32, y: f32, character_handles: &Res<CharacterHandles>) -
 
     (
         SpriteSheetBundle {
-            texture_atlas: character_handles.soviet_idle.clone(),
+            texture_atlas: character_handles.german_idle.clone(),
             sprite: TextureAtlasSprite {
                 index: 0,
                 flip_x: true,
@@ -67,7 +67,7 @@ fn get_enemy_bundle(x: f32, y: f32, character_handles: &Res<CharacterHandles>) -
             transform: Transform::from_xyz(x, y, 1.),
             ..default()
         },
-        CharacterAnimations::SovietIdle.get_animation(),
+        CharacterAnimations::GermanIdle.get_animation(),
         Enemy::default()
     )
 }
@@ -239,7 +239,7 @@ pub fn enemy_shoot_player(
                     println!("<< shot >>");
                     commands.entity(enemy_entity).insert((
                         SpriteSheetBundle {
-                            texture_atlas: character_handles.soviet_fire.clone(),
+                            texture_atlas: character_handles.german_fire.clone(),
                             sprite: TextureAtlasSprite {
                                 flip_x: true,
                                 ..default()
@@ -247,7 +247,7 @@ pub fn enemy_shoot_player(
                             transform: *enemy_transform,
                             ..default()
                         },
-                        CharacterAnimations::SovietFire.get_animation(),
+                        CharacterAnimations::GermanFire.get_animation(),
                         Firing::default(),
                     ));
                     enemy_shot_player_event_writer.send(PlayerShotEvent);
@@ -275,7 +275,7 @@ pub fn tick_and_replace_enemy_fire_timer(
             // inserting this replaces the old one
             commands.entity(enemy_entity).insert((
                 SpriteSheetBundle {
-                    texture_atlas: character_handles.soviet_idle.clone(),
+                    texture_atlas: character_handles.german_idle.clone(),
                     sprite: TextureAtlasSprite {
                         flip_x: true,
                         ..default()
@@ -283,7 +283,7 @@ pub fn tick_and_replace_enemy_fire_timer(
                     transform: *transform,
                     ..default()
                 },
-                CharacterAnimations::SovietIdle.get_animation(),
+                CharacterAnimations::GermanIdle.get_animation(),
             ));
         }
     }

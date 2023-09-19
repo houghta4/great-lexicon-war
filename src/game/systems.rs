@@ -50,15 +50,13 @@ const GERMAN_FIRE: SpriteSheetInfo = SpriteSheetInfo {
     cols: 10,
     rows: 1,
 };
-
-const BARRIER: SpriteSheetInfo = SpriteSheetInfo {
-  path: "sprites/objects/barriers.png",
-    x: 256.0,
-    y: 256.0,
-    cols: 1,
-    rows: 1
+const GERMAN_IDLE: SpriteSheetInfo = SpriteSheetInfo {
+    path: "sprites/german_soldier/mp40_idling.png",
+    x: 128.0,
+    y: 128.0,
+    cols: 10,
+    rows: 1,
 };
-
 pub fn insert_word_bank(mut commands: Commands) {
     // 100 words per category for now
     let mut word_bank = WordBank::default();
@@ -115,7 +113,7 @@ pub fn init_texture_atlas_handles(
         soviet_fire: get_texture_atlas_handle(SOVIET_FIRE, &asset_server, &mut texture_atlases),
         german_walk: get_texture_atlas_handle(GERMAN_WALK, &asset_server, &mut texture_atlases),
         german_fire: get_texture_atlas_handle(GERMAN_FIRE, &asset_server, &mut texture_atlases),
-        barrier: get_texture_atlas_handle(BARRIER, &asset_server, &mut texture_atlases)
+        german_idle: get_texture_atlas_handle(GERMAN_IDLE, &asset_server, &mut texture_atlases)
     };
 
     commands.insert_resource(handles);
