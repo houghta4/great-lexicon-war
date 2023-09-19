@@ -19,6 +19,7 @@ pub enum CharacterAnimations {
     SovietFire,
     GermanWalk,
     GermanFire,
+    GermanIdle
 }
 
 impl CharacterAnimations {
@@ -29,6 +30,7 @@ impl CharacterAnimations {
             Self::SovietFire => AnimationIndices(0, 9),
             Self::GermanWalk => AnimationIndices(0, 7),
             Self::GermanFire => AnimationIndices(0, 7),
+            Self::GermanIdle => AnimationIndices(0, 9)
         };
         let timer = match *self {
             Self::SovietFire => AnimationTimer(Timer::from_seconds(0.035, TimerMode::Repeating)),
