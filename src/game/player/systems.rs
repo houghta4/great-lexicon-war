@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use crate::AppState;
 use crate::game::animations::components::{CharacterAnimations, MovableCharacter};
 use crate::game::enemy::events::EnemyShotEvent;
 use crate::game::resources::CharacterHandles;
@@ -50,6 +51,7 @@ pub fn despawn_player(mut commands: Commands, player_q: Query<Entity, With<Playe
 pub fn player_take_damage(
     mut player_q: Query<&mut Player>,
     mut player_shot_event_reader: EventReader<PlayerShotEvent>,
+    mut next_app_state: ResMut<NextState<AppState>>
 ) {
     for _ in player_shot_event_reader.iter() {
         if let Ok(mut player) = player_q.get_single_mut() {
@@ -57,6 +59,7 @@ pub fn player_take_damage(
                 player.health -= PLAYER_DAMAGE;
             } else {
                 player.health = 0.0;
+                next_app_state.set(AppState::GameOver);
             }
         }
     }

@@ -197,7 +197,7 @@ pub fn render_level_data(
 
 pub fn clear_map(mut commands: Commands, rendered_map_q: Query<Entity, With<RenderedTile>>) {
     rendered_map_q.iter().for_each(|map| {
-        commands.entity(map).despawn();
+        commands.entity(map).despawn_recursive();
     });
 }
 
