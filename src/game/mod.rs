@@ -4,7 +4,7 @@ mod animations;
 mod camera;
 mod enemy;
 mod input;
-mod level;
+pub mod level;
 mod player;
 mod resources;
 mod systems;
@@ -72,6 +72,7 @@ pub struct InGameRunning;
 
 #[derive(States, Debug, Clone, Copy, Eq, PartialEq, Hash, Default)]
 pub enum InGameState {
+    LevelCompleted,
     #[default]
     Running,
     Paused,

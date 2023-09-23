@@ -11,7 +11,7 @@ use crate::AppState;
 use crate::game::enemy::events::EnemyShotEvent;
 
 use self::resources::{EnemySpawnTimer, EnemySpawns};
-use super::level::events::LevelCompletedEvent;
+use super::level::events::LevelInitEvent;
 use super::InGameState;
 
 pub struct EnemyPlugin;
@@ -24,7 +24,7 @@ impl Plugin for EnemyPlugin {
             // Systems
             .add_systems(
                 Update,
-                init_enemy_level_info.run_if(on_event::<LevelCompletedEvent>()),
+                init_enemy_level_info.run_if(on_event::<LevelInitEvent>()),
             )
             .add_systems(
                 Update,

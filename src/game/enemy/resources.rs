@@ -19,12 +19,3 @@ impl Default for EnemySpawnTimer {
 pub struct EnemySpawns {
     pub enemies: Vec<Vec2>,
 }
-
-#[derive(Resource, Default)]
-pub struct EnemyHandles {
-    pub soviet_idle: Handle<TextureAtlas>,
-    pub soviet_walk: Handle<TextureAtlas>,
-    pub soviet_fire: Handle<TextureAtlas>,
-    pub german_walk: Handle<TextureAtlas>,
-    pub german_fire: Handle<TextureAtlas>,
-}

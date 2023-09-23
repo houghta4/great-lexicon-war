@@ -1,7 +1,8 @@
 use bevy::prelude::*;
+use crate::AppState;
 use crate::game::input::components::InputText;
-use crate::game::level::components::{BarrierPoint, MapObjectClass, Tileset};
-use crate::game::level::events::SpawnBarriersEvent;
+use crate::game::level::components::{MovePoint, MapObjectClass, Tileset};
+use crate::game::level::events::SpawnMovePointsEvent;
 use crate::game::resources::{RandomWord, WordBank};
 use crate::game::utils::spawn_word;
 use crate::game::word_match::components::{Word, WordTarget};
@@ -9,8 +10,7 @@ use crate::game::WordComplexity;
 
 use super::{
     components::{LevelInfo, RenderedTile, TiledMap},
-    events::LevelCompletedEvent,
-    resources::Level,
+    events::{LevelCompletedEvent, LevelInitEvent}
 };
 
 pub fn setup_levels(mut commands: Commands) {
@@ -22,29 +22,27 @@ pub fn setup_levels(mut commands: Commands) {
     });
 
     // Lv 2
-    /*commands.spawn(LevelInfo {
-        map: "assets/maps/level_02.json".to_string(),
+    commands.spawn(LevelInfo {
+        map: "assets/maps/level_01.json".to_string(),
         spawn_rate: 3.0,
         enemies: vec![Vec2::new(0., 0.)]
-    });*/
-    //TODO: make more levels
+    });
+    //TODO: better way to store levels
 }
 
 // Send event from current level, then increment
 pub fn level_complete_event(
-    keyboard_input: Res<Input<KeyCode>>,
-    mut level: ResMut<Level>, // may not work?
-    mut level_complete_event: EventWriter<LevelCompletedEvent>,
-) {
-    if keyboard_input.just_pressed(KeyCode::Delete) {
-        level.0 += 1;
-        println!("Creating LevelCompletedEvent for Level({})", level.0);
-        level_complete_event.send(LevelCompletedEvent(level.0));
-    }
+        keyboard_input: Res<Input<KeyCode>>,
+        mut level_complete_event: EventWriter<LevelCompletedEvent>,
+    ) {
+        if keyboard_input.just_pressed(KeyCode::Delete) {
+            println!("Creating LevelCompletedEvent)");
+            level_complete_event.send(LevelCompletedEvent);
+        }
 }
 
-pub fn init_level(mut level_complete_event: EventWriter<LevelCompletedEvent>) {
-    level_complete_event.send(LevelCompletedEvent(0));
+pub fn init_level(mut level_init_event: EventWriter<LevelInitEvent>) {
+    level_init_event.send(LevelInitEvent(0));
 }
 
 fn parse_tiled_map(map_path: &str) -> Result<TiledMap, Box<dyn std::error::Error>> {
@@ -62,17 +60,17 @@ pub fn render_level_data(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
-    mut level_complete_event_reader: EventReader<LevelCompletedEvent>,
+    mut level_init_event_reader: EventReader<LevelInitEvent>,
     level_info_q: Query<&LevelInfo>,
     rendered_map_q: Query<Entity, With<RenderedTile>>,
     mut word_bank: ResMut<WordBank>,
     word_q: Query<&Word, (With<Word>, Without<InputText>)>
 ) {
     let font: Handle<Font> = asset_server.load("fonts/fyodor/truetype/Fyodor-BoldCondensed.ttf");
-    for level in level_complete_event_reader.iter() {
+    for level in level_init_event_reader.iter() {
         // clear out old map
         rendered_map_q.iter().for_each(|map| {
-            commands.entity(map).despawn();
+            commands.entity(map).despawn_recursive();
         });
 
         if let Some(level_info) = level_info_q.iter().nth(level.0) {
@@ -86,13 +84,11 @@ pub fn render_level_data(
             let mut bundles: Vec<(SpriteSheetBundle, RenderedTile)> = vec![];
 
             // Sprite sheet
-            let texture_handle: Handle<Image> =
-                asset_server.load("sprites/terrain/spring_tileset.png");
+            let texture_handle: Handle<Image> = asset_server.load("sprites/terrain/spring_tileset.png");
             if let Ok(tileset_data) = parse_tileset("assets/sprites/terrain/spring_tileset.json") {
                 let texture_atlas =
                     TextureAtlas::from_grid(texture_handle, Vec2::new(tileset_data.size, tileset_data.size), tileset_data.columns, tileset_data.rows, None, None);
                 let texture_atlas_handle = texture_atlases.add(texture_atlas);
-                println!("starting to spawn layers");
                 // Loop over each layer
                 for (layer_count, layer) in map_data.layers.iter().enumerate() {
                     let data = &layer.data;
@@ -111,13 +107,10 @@ pub fn render_level_data(
                                     texture_atlas: texture_atlas_handle.clone(),
                                     sprite: TextureAtlasSprite::new(data[idx] as usize),
                                     transform: Transform::from_translation(position),
-                                       // .with_scale(tile_scale),
-
                                     ..default()
                                 },
                                 RenderedTile,
                             );
-                            println!("spawn tile");
                             bundles.push(tile);
                         }
                     }
@@ -126,8 +119,13 @@ pub fn render_level_data(
                 let tree_texture_handle: Handle<Image> = asset_server.load("sprites/objects/trees.png");
                 let stone_texture_handle: Handle<Image> = asset_server.load("sprites/objects/stones.png");
                 let barrier_texture_handle: Handle<Image> = asset_server.load("sprites/objects/barriers.png");
+                let objective_texture_handle: Handle<Image> = asset_server.load("sprites/objects/objectives.png");
 
-                if let (Ok(tree_data), Ok(stone_data), Ok(barrier_data)) = (parse_tileset("assets/sprites/objects/trees.json"), parse_tileset("assets/sprites/objects/stones.json"), parse_tileset("assets/sprites/objects/barriers.json")) {
+                if let (Ok(tree_data), Ok(stone_data), Ok(barrier_data), Ok(objective_data)) =
+                    (parse_tileset("assets/sprites/objects/trees.json"),
+                     parse_tileset("assets/sprites/objects/stones.json"),
+                     parse_tileset("assets/sprites/objects/barriers.json"),
+                     parse_tileset("assets/sprites/objects/objectives.json")) {
                     let tree_texture_atlas =
                         TextureAtlas::from_grid(tree_texture_handle, Vec2::new(tree_data.size, tree_data.size), tree_data.columns, tree_data.rows, None, None);
                     let tree_atlas_handle = texture_atlases.add(tree_texture_atlas);
@@ -139,16 +137,22 @@ pub fn render_level_data(
                     let barrier_texture_atlas =
                         TextureAtlas::from_grid(barrier_texture_handle, Vec2::new(barrier_data.size, barrier_data.size), barrier_data.columns, barrier_data.rows, None, None);
                     let barrier_atlas_handle = texture_atlases.add(barrier_texture_atlas);
-                    let mut barrier_id = 0;
+
+                    let objective_texture_atlas =
+                        TextureAtlas::from_grid(objective_texture_handle, Vec2::new(objective_data.size, objective_data.size), objective_data.columns, objective_data.rows, None, None);
+                    let objective_atlas_handle = texture_atlases.add(objective_texture_atlas);
+
+                    let mut move_id = 0;
                     for object in map_data.objects {
                         let object_atlas_handle = match object.class {
                             MapObjectClass::Barrier(_) => &barrier_atlas_handle,
                             MapObjectClass::Tree => &tree_atlas_handle,
-                            MapObjectClass::Stone => &stone_atlas_handle
+                            MapObjectClass::Stone => &stone_atlas_handle,
+                            MapObjectClass::Objective(_) => &objective_atlas_handle
                         };
 
                         match object.class {
-                            MapObjectClass::Barrier(group_id) => {
+                            MapObjectClass::Barrier(group_id) | MapObjectClass::Objective(group_id) => {
                                 let mut entity_commands = commands.spawn((
                                     SpriteSheetBundle {
                                         texture_atlas: object_atlas_handle.clone(),
@@ -156,18 +160,18 @@ pub fn render_level_data(
                                         transform: Transform::from_translation(Vec3::new(object.x, object.y, 4.)),
                                         ..default()
                                     },
-                                    RenderedTile, //TODO: we ok with this here?
-                                    BarrierPoint {
+                                    RenderedTile,
+                                    MovePoint {
                                         group_id,
-                                        id: barrier_id
+                                        id: move_id
                                     }
                                 ));
                                 if group_id == 0 {
                                     entity_commands.with_children(|builder| {
-                                        spawn_word(builder, word_bank.get_word(WordComplexity::Easy, &word_q).as_str(), &font, WordTarget::Move(barrier_id));
+                                        spawn_word(builder, word_bank.get_word(WordComplexity::Easy, &word_q).as_str(), &font, WordTarget::Move(move_id));
                                     });
                                 }
-                                barrier_id += 1;
+                                move_id += 1;
                             },
                             _ => {
                                 //TODO: this could look awkward sometimes when the players feet are below the bottom of the object, adjust
@@ -178,7 +182,7 @@ pub fn render_level_data(
                                         transform: Transform::from_translation(Vec3::new(object.x, object.y, 4.)),
                                         ..default()
                                     },
-                                    RenderedTile //TODO: we ok with this here?
+                                    RenderedTile
                                 ));
                             }
                         }
@@ -193,33 +197,50 @@ pub fn render_level_data(
 
 pub fn clear_map(mut commands: Commands, rendered_map_q: Query<Entity, With<RenderedTile>>) {
     rendered_map_q.iter().for_each(|map| {
-        commands.entity(map).despawn();
+        commands.entity(map).despawn_recursive();
     });
 }
 
-pub fn catch_spawn_barriers_event(
+pub fn catch_spawn_move_points_event(
     mut commands: Commands,
     mut word_bank: ResMut<WordBank>,
     word_q: Query<&Word, (With<Word>, Without<InputText>)>,
     asset_server: Res<AssetServer>,
-    mut barrier_spawn_reader: EventReader<SpawnBarriersEvent>,
-    mut barrier_q: Query<(Entity, &BarrierPoint, Option<&Children>), With<BarrierPoint>>) {
+    mut move_point_spawn_reader: EventReader<SpawnMovePointsEvent>,
+    mut move_point_q: Query<(Entity, &MovePoint, Option<&Children>), With<MovePoint>>,
+    mut level_complete_writer: EventWriter<LevelCompletedEvent>) {
 
     let font = asset_server.load("fonts/fyodor/truetype/Fyodor-BoldCondensed.ttf");
 
-    for barrier_event in barrier_spawn_reader.iter() {
-        for (entity, barrier_point, children_opt) in barrier_q.iter_mut() {
-            if barrier_point.group_id == barrier_event.0 {
+    for move_point_event in move_point_spawn_reader.iter() {
+        let mut move_point_spawned = false;
+        for (entity, move_point, children_opt) in move_point_q.iter_mut() {
+            if move_point.group_id == move_point_event.0 {
                 if let Some(children) = children_opt {
                     if let Some(child) = children.get(0) {
                         commands.entity(*child).despawn_recursive();
                     }
                 }
-            } else if barrier_point.group_id == barrier_event.0 + 1 {
+            } else if move_point.group_id == move_point_event.0 + 1 {
+                move_point_spawned = true;
                 commands.entity(entity).with_children(|builder| {
-                    spawn_word(builder, word_bank.get_word(WordComplexity::Easy, &word_q).as_str(), &font, WordTarget::Move(barrier_point.id));
+                    spawn_word(builder, word_bank.get_word(WordComplexity::Easy, &word_q).as_str(), &font, WordTarget::Move(move_point.id));
                 });
             }
         }
+
+        if !move_point_spawned {
+            //final movement
+            level_complete_writer.send(LevelCompletedEvent);
+        }
+    }
+}
+
+pub fn catch_level_completed_event(
+    mut level_completed_reader: EventReader<LevelCompletedEvent>,
+    mut next_app_state: ResMut<NextState<AppState>>
+) {
+    for _ in level_completed_reader.iter() {
+        next_app_state.set(AppState::LevelCompleted);
     }
 }

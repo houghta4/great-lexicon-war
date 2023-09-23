@@ -4,6 +4,13 @@ use bevy::window::PrimaryWindow;
 use crate::components::*;
 use crate::game::player::components::*;
 
+pub fn reset_camera_position(mut camera_q: Query<&mut Transform, With<GameCamera>>) {
+    if let Ok(mut camera_transform) = camera_q.get_single_mut() {
+        camera_transform.translation.x = 0.;
+        camera_transform.translation.y = 0.;
+    }
+}
+
 pub fn camera_follow_player(
     mut camera_q: Query<&mut Transform, With<GameCamera>>,
     player_q: Query<&Transform, (With<Player>, Without<GameCamera>)>,
