@@ -95,3 +95,17 @@ pub fn check_matches(
         }
     }
 }
+
+/// ### Clear the user input word immediately
+///
+/// * `LCtrl` + `Backspace`
+pub fn clear_word(
+    mut input_text: Query<&mut Text, With<InputText>>,
+    keyboard_input: Res<Input<KeyCode>>,
+) {
+    if keyboard_input.pressed(KeyCode::ControlLeft) && keyboard_input.just_pressed(KeyCode::Back) {
+        if let Ok(mut input_str) = input_text.get_single_mut() {
+            input_str.sections[0].value = "".to_owned();
+        }
+    }
+}
