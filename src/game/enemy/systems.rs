@@ -1,7 +1,7 @@
 use bevy::{prelude::*, window::PrimaryWindow};
 use rand::random;
 
-use crate::game::animations::components::AnimateSprite;
+use crate::game::animations::components::{AnimateSprite, MovableCharacter};
 use crate::game::enemy::events::EnemyShotEvent;
 use crate::game::enemy::resources::EnemySpawns;
 use crate::game::enemy::components::*;
@@ -11,7 +11,7 @@ use crate::game::level::events::LevelInitEvent;
 use crate::game::player::components::Player;
 use crate::game::player::events::PlayerShotEvent;
 use crate::game::resources::{CharacterHandles, RandomWord, WordBank};
-use crate::game::utils::spawn_word;
+use crate::game::utils::{determine_hit, spawn_word};
 use crate::game::word_match::components::{Word, WordTarget};
 use crate::game::WordComplexity;
 use crate::game::animations::components::CharacterAnimations;
@@ -165,26 +165,45 @@ pub fn spawn_enemies_gradually(
     - If enemy is dead, despawn
     - Else, apply new word, and update health bar
 **/
-#[allow(clippy::too_many_arguments)] //TODO: reduce complexity?
+#[allow(clippy::too_many_arguments, clippy::type_complexity)] //TODO: reduce complexity?
 pub fn catch_shot_event(
     mut commands: Commands,
     enemy_word_q: Query<(&Parent, Entity, &Word), With<Word>>,
-    mut enemy_q: Query<(&mut Enemy, &Children)>,
-    mut health_bar_q: Query<(&mut Sprite, &mut Transform), With<HealthBar>>,
+    mut enemy_q: Query<(&mut Enemy, &Children, &Transform)>,
+    mut health_bar_q: Query<(&mut Sprite, &mut Transform), (With<HealthBar>, Without<Enemy>)>,
     mut shot_event_reader: EventReader<EnemyShotEvent>,
     asset_server: Res<AssetServer>,
     mut word_bank: ResMut<WordBank>,
     word_q: Query<&Word, (With<Word>, Without<InputText>)>,
+    player_q: Query<(&Transform, &MovableCharacter), With<Player>>
 ) {
     let font: Handle<Font> = asset_server.load("fonts/fyodor/truetype/Fyodor-BoldCondensed.ttf");
     for shot in shot_event_reader.iter() {
         for (parent, entity, word) in &mut enemy_word_q.iter() {
             if word.0 == WordTarget::Enemy(shot.0) {
-                if let Ok(mut enemy) = enemy_q.get_mut(parent.get()) {
-                    enemy.0.health -= 10;
-                    if enemy.0.health == 0 {
-                        commands.entity(parent.get()).despawn_recursive();
-                    } else {
+                if let (Ok(mut enemy), Ok(player)) = (enemy_q.get_mut(parent.get()), player_q.get_single()) {
+                    let distance = player.0.translation.distance(enemy.2.translation);
+                    for _ in 0..5 {
+                        if determine_hit(distance, player.1.move_target.is_none(), 0.15) {
+                            enemy.0.health -= 10;
+                            if enemy.0.health == 0 {
+                                commands.entity(parent.get()).despawn_recursive();
+                            } else {
+                                //TODO: better way to get the child sprite/transform than this?
+                                for &child in enemy.1 {
+                                    if let Ok(mut health_bar) = health_bar_q.get_mut(child) {
+                                        // 80 is the starting health bar size, multiplied against the health percentage
+                                        health_bar.0.custom_size =
+                                            Some(Vec2::new(80. * (enemy.0.health as f32 / 100.), 2.));
+                                        // how much we need to offset x by to keep it left-justified, percentage of health lost multiplied by health bar size (80), divided by 2 as x is the center of the bar
+                                        health_bar.1.translation.x =
+                                            -((100. - enemy.0.health as f32) / 100.) * 80. / 2.;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    if enemy.0.health > 0 {
                         commands.entity(entity).despawn_recursive();
                         commands.entity(parent.get()).with_children(|builder| {
                             //TODO: update background box to change by word length? how to handle health bar then
@@ -195,17 +214,6 @@ pub fn catch_shot_event(
                                 WordTarget::Enemy(builder.parent_entity().index())
                             );
                         });
-                        //TODO: better way to get the child sprite/transform than this?
-                        for &child in enemy.1 {
-                            if let Ok(mut health_bar) = health_bar_q.get_mut(child) {
-                                // 80 is the starting health bar size, multiplied against the health percentage
-                                health_bar.0.custom_size =
-                                    Some(Vec2::new(80. * (enemy.0.health as f32 / 100.), 2.));
-                                // how much we need to offset x by to keep it left-justified, percentage of health lost multiplied by health bar size (80), divided by 2 as x is the center of the bar
-                                health_bar.1.translation.x =
-                                    -((100. - enemy.0.health as f32) / 100.) * 80. / 2.;
-                            }
-                        }
                     }
                 } else {
                     println!("ERROR: no matching enemy found!");
@@ -250,7 +258,7 @@ pub fn enemy_shoot_player(
                         CharacterAnimations::GermanFire.get_animation(),
                         Firing::default(),
                     ));
-                    enemy_shot_player_event_writer.send(PlayerShotEvent);
+                    enemy_shot_player_event_writer.send(PlayerShotEvent(distance));
                 }
             }
         }

@@ -3,6 +3,7 @@ use crate::AppState;
 use crate::game::animations::components::{CharacterAnimations, MovableCharacter};
 use crate::game::enemy::events::EnemyShotEvent;
 use crate::game::resources::CharacterHandles;
+use crate::game::utils::determine_hit;
 
 use super::{
     components::*,
@@ -49,17 +50,24 @@ pub fn despawn_player(mut commands: Commands, player_q: Query<Entity, With<Playe
 ///
 /// This is triggered by an `Enemy`
 pub fn player_take_damage(
-    mut player_q: Query<&mut Player>,
+    mut player_q: Query<(&mut Player, &MovableCharacter)>,
     mut player_shot_event_reader: EventReader<PlayerShotEvent>,
     mut next_app_state: ResMut<NextState<AppState>>
 ) {
-    for _ in player_shot_event_reader.iter() {
-        if let Ok(mut player) = player_q.get_single_mut() {
-            if player.health - PLAYER_DAMAGE >= 0.0 {
-                player.health -= PLAYER_DAMAGE;
-            } else {
-                player.health = 0.0;
-                next_app_state.set(AppState::GameOver);
+    for e in player_shot_event_reader.iter() {
+        if let Ok((mut player, movable_character)) = player_q.get_single_mut() {
+            for _ in 0..5 {
+                if determine_hit(e.0, movable_character.move_target.is_none(), 0.15) {
+                    println!("player hit!");
+                    if player.health - PLAYER_DAMAGE >= 0.0 {
+                        player.health -= PLAYER_DAMAGE;
+                    } else {
+                        player.health = 0.0;
+                        next_app_state.set(AppState::GameOver);
+                    }
+                } else {
+                    println!("player miss!");
+                }
             }
         }
     }
@@ -75,10 +83,11 @@ pub fn player_shot_enemy(
     for _ in enemy_shot_event_reader.iter() {
         if let Ok(mut player) = player_q.get_single_mut() {
             if player.ammo.0 > 0 {
-                player.ammo.0 -= 5; // TODO: subtract by 1 when finished testing
+                player.ammo.0 -= 5; // TODO: subtract by gun's burst amount
             } else {
                 player.ammo.0 = 0;
             }
+            //TODO: animation switch?
         }
     }
 }
