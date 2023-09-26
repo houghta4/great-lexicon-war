@@ -30,6 +30,7 @@ impl Plugin for HudPlugin {
                     update_heal_word.run_if(on_event::<PlayerHealEvent>()),
                 )
                     .in_set(InGameRunning),
-            );
+            )
+            .add_systems(OnExit(AppState::InGame), despawn_ui);
     }
 }

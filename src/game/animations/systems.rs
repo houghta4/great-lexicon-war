@@ -1,8 +1,8 @@
 use bevy::prelude::*;
 use crate::game::animations::components::{AnimateSprite, CharacterAnimations, MovableCharacter};
 use crate::game::animations::events::CharacterMoveEvent;
-use crate::game::level::components::BarrierPoint;
-use crate::game::level::events::SpawnBarriersEvent;
+use crate::game::level::components::MovePoint;
+use crate::game::level::events::SpawnMovePointsEvent;
 use crate::game::resources::CharacterHandles;
 
 // Sometimes the edges are white. Possible issues: z-index fighting, need background
@@ -39,7 +39,7 @@ pub fn catch_character_move_event(
     mut character_q: Query<(&mut MovableCharacter, &Transform, Entity), With<MovableCharacter>>,
     mut move_event_reader: EventReader<CharacterMoveEvent>,
     character_handles: Res<CharacterHandles>,
-    cover_point_q: Query<(&BarrierPoint, &Transform), (With<BarrierPoint>, Without<MovableCharacter>)>) {
+    cover_point_q: Query<(&MovePoint, &Transform), (With<MovePoint>, Without<MovableCharacter>)>) {
 
     for move_event in move_event_reader.iter() {
         for mut character in character_q.iter_mut() {
@@ -76,7 +76,7 @@ Moves character when they have a destination, switches animation, and moves play
 pub fn move_character(
     mut commands: Commands,
     mut character_q: Query<(&mut MovableCharacter, &mut Transform, Entity), With<MovableCharacter>>,
-    mut barrier_event_writer: EventWriter<SpawnBarriersEvent>,
+    mut barrier_event_writer: EventWriter<SpawnMovePointsEvent>,
     character_handles: Res<CharacterHandles>,
     time: Res<Time>) {
 
@@ -98,7 +98,7 @@ pub fn move_character(
                         CharacterAnimations::SovietIdle.get_animation()
                     ));
                     character.0.move_target = None;
-                    barrier_event_writer.send(SpawnBarriersEvent(move_target.1));
+                    barrier_event_writer.send(SpawnMovePointsEvent(move_target.1));
                 } else if x_diff == 0. {
                     if y_diff > 0. {
                         character.1.translation.y -= 5.;

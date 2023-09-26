@@ -8,7 +8,7 @@ use crate::game::enemy::events::EnemyShotEvent;
 use crate::game::enemy::resources::EnemySpawns;
 use crate::game::input::components::InputText;
 use crate::game::level::components::LevelInfo;
-use crate::game::level::events::LevelCompletedEvent;
+use crate::game::level::events::LevelInitEvent;
 use crate::game::player::components::Player;
 use crate::game::player::events::PlayerShotEvent;
 use crate::game::resources::{CharacterHandles, RandomWord, WordBank};
@@ -53,7 +53,7 @@ pub fn despawn_enemies(mut commands: Commands, enemy_q: Query<Entity, With<Enemy
 fn get_enemy_bundle(x: f32, y: f32, character_handles: &Res<CharacterHandles>) -> EnemyBundle {
     (
         SpriteSheetBundle {
-            texture_atlas: character_handles.soviet_idle.clone(),
+            texture_atlas: character_handles.german_idle.clone(),
             sprite: TextureAtlasSprite {
                 index: 0,
                 flip_x: true,
@@ -62,8 +62,8 @@ fn get_enemy_bundle(x: f32, y: f32, character_handles: &Res<CharacterHandles>) -
             transform: Transform::from_xyz(x, y, 1.),
             ..default()
         },
-        CharacterAnimations::SovietIdle.get_animation(),
-        Enemy::default(),
+        CharacterAnimations::GermanIdle.get_animation(),
+        Enemy::default()
     )
 }
 
@@ -97,9 +97,9 @@ pub fn spawn_initial_enemies(
 pub fn init_enemy_level_info(
     mut commands: Commands,
     level_info_q: Query<&LevelInfo>,
-    mut level_complete_event_reader: EventReader<LevelCompletedEvent>,
+    mut level_init_event_reader: EventReader<LevelInitEvent>,
 ) {
-    for level in level_complete_event_reader.iter() {
+    for level in level_init_event_reader.iter() {
         if let Some(level_info) = level_info_q.iter().nth(level.0) {
             println!("Inserting resources");
             commands.insert_resource(EnemySpawnTimer {
@@ -227,12 +227,11 @@ pub fn enemy_shoot_player(
                 .translation
                 .distance(enemy_transform.translation)
                 + 0.1;
-
             if vis.is_visible_in_view() && shot_chance(distance) {
                 println!("<< shot from {} units away >>", distance);
                 commands.entity(enemy_entity).insert((
                     SpriteSheetBundle {
-                        texture_atlas: character_handles.soviet_fire.clone(),
+                        texture_atlas: character_handles.german_fire.clone(),
                         sprite: TextureAtlasSprite {
                             flip_x: true,
                             ..default()
@@ -240,7 +239,7 @@ pub fn enemy_shoot_player(
                         transform: *enemy_transform,
                         ..default()
                     },
-                    CharacterAnimations::SovietFire.get_animation(),
+                    CharacterAnimations::GermanFire.get_animation(),
                     Firing::default(),
                 ));
                 enemy_shot_player_event_writer.send(PlayerShotEvent);
@@ -276,7 +275,7 @@ pub fn tick_and_replace_enemy_fire_timer(
             // inserting this replaces the old one
             commands.entity(enemy_entity).insert((
                 SpriteSheetBundle {
-                    texture_atlas: character_handles.soviet_idle.clone(),
+                    texture_atlas: character_handles.german_idle.clone(),
                     sprite: TextureAtlasSprite {
                         flip_x: true,
                         ..default()
@@ -284,7 +283,7 @@ pub fn tick_and_replace_enemy_fire_timer(
                     transform: *transform,
                     ..default()
                 },
-                CharacterAnimations::SovietIdle.get_animation(),
+                CharacterAnimations::GermanIdle.get_animation(),
             ));
         }
     }
