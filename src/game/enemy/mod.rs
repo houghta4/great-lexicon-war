@@ -10,7 +10,7 @@ use systems::*;
 use crate::AppState;
 use crate::game::enemy::events::EnemyShotEvent;
 
-use self::resources::{EnemySpawnTimer, EnemySpawns};
+use self::resources::EnemySpawns;
 use super::level::events::LevelInitEvent;
 use super::InGameState;
 
@@ -39,13 +39,6 @@ impl Plugin for EnemyPlugin {
                     enemy_shoot_player,
                     tick_and_replace_enemy_fire_timer,
                 )
-                    .run_if(in_state(AppState::InGame))
-                    .run_if(in_state(InGameState::Running)),
-            )
-            .add_systems(
-                Update,
-                spawn_enemies_gradually
-                    .run_if(resource_exists::<EnemySpawnTimer>())
                     .run_if(in_state(AppState::InGame))
                     .run_if(in_state(InGameState::Running)),
             )
