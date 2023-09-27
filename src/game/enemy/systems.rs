@@ -170,7 +170,7 @@ pub fn catch_shot_event(
     mut commands: Commands,
     enemy_word_q: Query<(&Parent, Entity, &Word), With<Word>>,
     mut enemy_q: Query<(&mut Enemy, &Children, &Transform)>,
-    mut health_bar_q: Query<(&mut Sprite, &mut Transform), (With<HealthBar>, Without<Enemy>)>,
+    mut health_bar_q: Query<(&mut Sprite, &mut Transform), (With<HealthBar>, Without<Enemy>, Without<Player>)>,
     mut shot_event_reader: EventReader<EnemyShotEvent>,
     asset_server: Res<AssetServer>,
     mut word_bank: ResMut<WordBank>,
