@@ -253,7 +253,7 @@ pub fn enemy_shoot_player(
 /// * `dist` is the Euclidean distance between the enemy and the player
 /// ### Return true if enemy should fire else false
 fn shot_chance(dist: f32) -> bool {
-    let chance = 1.0 / (10.0 * dist); // bigger distance -> lower chance
+    let chance = 1.0 / (5.0 * dist); // bigger distance -> lower chance
     random::<f32>() <= chance
 }
 
