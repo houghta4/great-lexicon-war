@@ -129,7 +129,7 @@ pub fn spawn_enemy_on_death(
     word_q: Query<&Word, (With<Word>, Without<InputText>)>,
     player_q: Query<&Transform, With<Player>>,
 ) {
-    let chance_to_spawn = 15.0;
+    let chance_to_spawn = 0.15;
     // spawn new enemy
     println!("spawn_enemy_on_death");
     if random::<f32>() < chance_to_spawn {        
