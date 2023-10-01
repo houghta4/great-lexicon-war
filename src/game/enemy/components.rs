@@ -17,16 +17,3 @@ impl Default for Enemy {
         }
     }
 }
-
-#[derive(Component)]
-pub struct Firing {
-    pub timer: Timer,
-}
-
-impl Default for Firing {
-    fn default() -> Self {
-        Firing {
-            timer: Timer::from_seconds(3.0, TimerMode::Once),
-        }
-    }
-}

@@ -37,7 +37,7 @@ impl Plugin for EnemyPlugin {
                 (
                     catch_shot_event,
                     enemy_shoot_player,
-                    tick_and_replace_enemy_fire_timer,
+                    //tick_and_replace_enemy_fire_timer,
                 )
                     .run_if(in_state(AppState::InGame))
                     .run_if(in_state(InGameState::Running)),
