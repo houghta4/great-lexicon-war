@@ -2,9 +2,10 @@ use bevy::{prelude::*, window::PrimaryWindow};
 use rand::random;
 
 use crate::game::animations::components::AnimateSprite;
+use crate::game::animations::components::CharacterAnimations;
+use crate::game::enemy::components::*;
 use crate::game::enemy::events::EnemyShotEvent;
 use crate::game::enemy::resources::EnemySpawns;
-use crate::game::enemy::components::*;
 use crate::game::input::components::InputText;
 use crate::game::level::components::LevelInfo;
 use crate::game::level::events::LevelInitEvent;
@@ -14,17 +15,14 @@ use crate::game::resources::{CharacterHandles, RandomWord, WordBank};
 use crate::game::utils::spawn_word;
 use crate::game::word_match::components::{Word, WordTarget};
 use crate::game::WordComplexity;
-use crate::game::animations::components::CharacterAnimations;
 
 use super::resources::EnemySpawnTimer;
 
 // https://github.com/bevyengine/bevy/blob/main/examples/2d/sprite_sheet.rs
 
-type EnemyBundle = (
-    SpriteSheetBundle,
-    AnimateSprite,
-    Enemy,
-);
+type EnemyBundle = (SpriteSheetBundle, AnimateSprite, Enemy);
+
+const ENEMY_SPRITE_SIZE: f32 = 128.0 + 70.0; // size of enemy sprite + health bar
 
 /**
     Spawn health bar for enemy
@@ -117,44 +115,52 @@ pub fn init_enemy_level_info(
     }
 }
 
-/// Spawn enemies over time depending on the current level's `spawn_rate`
-#[allow(clippy::too_many_arguments)]
-pub fn spawn_enemies_gradually(
+// TODO: add later on after we finish poc 
+#[allow(dead_code)]
+/// Chance to spawn another enemy after the death of a fellow comrade
+/// 
+/// run_if(on_event::<EnemyDeathEvent>())
+pub fn spawn_enemy_on_death(
     mut commands: Commands,
     win_q: Query<&Window, With<PrimaryWindow>>,
     asset_server: Res<AssetServer>,
-    mut enemy_spawn_timer: ResMut<EnemySpawnTimer>,
     character_handles: Res<CharacterHandles>,
     mut word_bank: ResMut<WordBank>,
     word_q: Query<&Word, (With<Word>, Without<InputText>)>,
-    time: Res<Time>,
+    player_q: Query<&Transform, With<Player>>,
 ) {
-    enemy_spawn_timer.timer.tick(time.delta());
-    if enemy_spawn_timer.timer.finished() {
-        println!("<< Spawning enemy from timer >>");
+    let chance_to_spawn = 0.15;
+    // spawn new enemy
+    println!("spawn_enemy_on_death");
+    if random::<f32>() < chance_to_spawn {        
         let win = win_q.get_single().unwrap();
-        let font = asset_server.load("fonts/fyodor/truetype/Fyodor-BoldCondensed.ttf");
-        let random_x = if random::<f32>() < 0.5 {
-            random::<f32>() * win.width() / 2.
-        } else {
-            -random::<f32>() * win.width() / 2.
+        let font: Handle<Font> = asset_server.load("fonts/fyodor/truetype/Fyodor-BoldCondensed.ttf");
+
+        let player_y =  match player_q.get_single() {
+            Ok(p) => p.translation.y,
+            _ => 0.0
         };
+
+        let random_x = (1.0 + random::<f32>()) * (win.width() / 2.0);
         let random_y = if random::<f32>() < 0.5 {
-            random::<f32>() * win.height() / 2.
+            player_y - ENEMY_SPRITE_SIZE + random::<f32>() * (win.height() / 2.0)
         } else {
-            -random::<f32>() * win.height() / 2.
+            player_y + ENEMY_SPRITE_SIZE - random::<f32>() * (win.height() / 2.0)
         };
+        let w = word_bank.get_word(WordComplexity::Medium, &word_q);
         commands
             .spawn(get_enemy_bundle(random_x, random_y, &character_handles))
             .with_children(|builder| {
                 spawn_health_bar(builder);
+                
                 spawn_word(
                     builder,
-                    word_bank.get_word(WordComplexity::Medium, &word_q).as_str(),
+                    &w,
                     &font,
-                    WordTarget::Enemy(builder.parent_entity().index())
+                    WordTarget::Enemy(builder.parent_entity().index()),
                 );
             });
+        println!("spawning enemy: {} at (x: {}, y: {})!", w, random_x, random_y);
     }
 }
 
