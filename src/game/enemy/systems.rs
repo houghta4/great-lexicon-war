@@ -20,7 +20,6 @@ use super::resources::EnemySpawnTimer;
 // https://github.com/bevyengine/bevy/blob/main/examples/2d/sprite_sheet.rs
 
 type EnemyBundle = (SpriteSheetBundle, AnimateSprite, Enemy);
-
 const ENEMY_SPRITE_SIZE: f32 = 128.0 + 70.0; // size of enemy sprite + health bar
 
 /**
@@ -52,7 +51,6 @@ pub fn despawn_enemies(mut commands: Commands, enemy_q: Query<Entity, With<Enemy
 /// All components a newly created Enemy will need
 // TODO: factions?
 fn get_enemy_bundle(x: f32, y: f32, character_handles: &Res<CharacterHandles>) -> EnemyBundle {
-
     (
         SpriteSheetBundle {
             texture_atlas: character_handles.german_idle.clone(),
@@ -76,7 +74,7 @@ pub fn spawn_initial_enemies(
     mut word_bank: ResMut<WordBank>,
     word_q: Query<&Word, (With<Word>, Without<InputText>)>,
     enemy_spawn: Res<EnemySpawns>,
-    character_handles: Res<CharacterHandles>
+    character_handles: Res<CharacterHandles>,
 ) {
     println!("Spawning initial enemies");
     let font = asset_server.load("fonts/fyodor/truetype/Fyodor-BoldCondensed.ttf");
@@ -89,7 +87,7 @@ pub fn spawn_initial_enemies(
                     builder,
                     word_bank.get_word(WordComplexity::Medium, &word_q).as_str(),
                     &font,
-                    WordTarget::Enemy(builder.parent_entity().index())
+                    WordTarget::Enemy(builder.parent_entity().index()),
                 );
             });
     }
@@ -216,7 +214,7 @@ pub fn catch_shot_event(
                                 builder,
                                 word_bank.get_word(WordComplexity::Medium, &word_q).as_str(),
                                 &font.clone(),
-                                WordTarget::Enemy(builder.parent_entity().index())
+                                WordTarget::Enemy(builder.parent_entity().index()),
                             );
                         });
                     }
@@ -227,47 +225,52 @@ pub fn catch_shot_event(
         }
     }
 }
-
 /// Enemy changes sprite sheet to shooting and triggers shot event
 #[allow(clippy::type_complexity)]
 pub fn enemy_shoot_player(
     mut commands: Commands,
-    mut enemy_q: Query<(Entity, &Transform), (With<Enemy>, Without<Firing>)>,
+    mut enemy_q: Query<(Entity, &Transform, &ComputedVisibility), (With<Enemy>, Without<Firing>)>,
     character_handles: Res<CharacterHandles>,
     mut enemy_shot_player_event_writer: EventWriter<PlayerShotEvent>,
     player_q: Query<&Transform, With<Player>>,
-    win_q: Query<&Window, With<PrimaryWindow>>,
 ) {
-    let win = win_q.get_single().unwrap();
     if let Ok(player_transform) = player_q.get_single() {
-        for (enemy_entity, enemy_transform) in enemy_q.iter_mut() {
+        for (enemy_entity, enemy_transform, vis) in enemy_q.iter_mut() {
+            // !
+            //#region Enemy fire rate
             // If enemy is on screen, theres a chance to shoot player
             let distance = player_transform
                 .translation
                 .distance(enemy_transform.translation)
                 + 0.1;
-            if distance < f32::max(win.height(), win.width()) {
-                let shot_chance = distance * random::<f32>();
-                if random::<f32>() > shot_chance {
-                    println!("<< shot >>");
-                    commands.entity(enemy_entity).insert((
-                        SpriteSheetBundle {
-                            texture_atlas: character_handles.german_fire.clone(),
-                            sprite: TextureAtlasSprite {
-                                flip_x: true,
-                                ..default()
-                            },
-                            transform: *enemy_transform,
+            if vis.is_visible_in_view() && shot_chance(distance) {
+                println!("<< shot from {} units away >>", distance);
+                commands.entity(enemy_entity).insert((
+                    SpriteSheetBundle {
+                        texture_atlas: character_handles.german_fire.clone(),
+                        sprite: TextureAtlasSprite {
+                            flip_x: true,
                             ..default()
                         },
-                        CharacterAnimations::GermanFire.get_animation(),
-                        Firing::default(),
-                    ));
-                    enemy_shot_player_event_writer.send(PlayerShotEvent(distance));
-                }
+                        transform: *enemy_transform,
+                        ..default()
+                    },
+                    CharacterAnimations::GermanFire.get_animation(),
+                    Firing::default(),
+                ));
+                enemy_shot_player_event_writer.send(PlayerShotEvent(distance));
             }
+            //#endregion
         }
     }
+}
+
+/// Scale shot chance with distance from enemy to player
+/// * `dist` is the Euclidean distance between the enemy and the player
+/// ### Return true if enemy should fire else false
+fn shot_chance(dist: f32) -> bool {
+    let chance = 1.0 / (5.0 * dist); // bigger distance -> lower chance
+    random::<f32>() <= chance
 }
 
 /// Ticks enemy Firing timer until finished
@@ -299,5 +302,49 @@ pub fn tick_and_replace_enemy_fire_timer(
                 CharacterAnimations::GermanIdle.get_animation(),
             ));
         }
+    }
+}
+
+/// Test with --nocapture to see prints
+#[cfg(test)]
+mod shot_chance_tests {
+    use super::shot_chance;
+
+    const RANGE: u32 = 1000000;
+
+    #[test]
+    fn test_close() {
+        let dist = 100.0; // 0.0390625
+        let mut counter = 0;
+        for _ in 0..RANGE {
+            if shot_chance(dist) {
+                counter += 1
+            }
+        }
+        println!("Fired {} times from {} units away", counter, dist);
+    }
+
+    #[test]
+    fn test_med() {
+        let dist = 500.0;
+        let mut counter = 0;
+        for _ in 0..RANGE {
+            if shot_chance(dist) {
+                counter += 1
+            }
+        }
+        println!("Fired {} times from {} units away", counter, dist);
+    }
+
+    #[test]
+    fn test_far() {
+        let dist = 1000.0;
+        let mut counter = 0;
+        for _ in 0..RANGE {
+            if shot_chance(dist) {
+                counter += 1
+            }
+        }
+        println!("Fired {} times from {} units away", counter, dist);
     }
 }
