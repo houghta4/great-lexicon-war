@@ -52,6 +52,7 @@ pub fn catch_character_move_event(
                         } else {
                             target_translation.x += 40.;
                         }
+                        target_translation.y += 50.;
                         character.0.move_target = Some((target_translation, cover_point.group_id));
                     }
                 }

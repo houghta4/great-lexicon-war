@@ -18,7 +18,12 @@ pub fn setup_levels(mut commands: Commands) {
     commands.spawn(LevelInfo {
         map: "assets/maps/level_01.json".to_string(),
         spawn_rate: 10.0,
-        enemies: vec![Vec2::new(0.,128.), Vec2::new(750., 300.)]
+        //TODO: exception when last enemy killed
+        //TODO: make player hit more reliably
+        enemies: vec![Vec2::new(550.,150.), Vec2::new(525., -50.), Vec2::new(925., 175.),
+                      Vec2::new(875., -70.), Vec2::new(1325., 185.), Vec2::new(1375., -60.),
+                      Vec2::new(1725., 165.), Vec2::new(1675., -75.), Vec2::new(2125., 145.),
+                      Vec2::new(2075., -55.)]
     });
 
     // Lv 2

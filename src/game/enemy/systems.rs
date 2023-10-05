@@ -169,6 +169,7 @@ pub fn spawn_enemy_on_death(
     - Else, apply new word, and update health bar
 **/
 #[allow(clippy::too_many_arguments, clippy::type_complexity)] //TODO: reduce complexity?
+//TODO: crashes when last enemy despawning?
 pub fn catch_shot_event(
     mut commands: Commands,
     enemy_word_q: Query<(&Parent, Entity, &Word), With<Word>>,
@@ -269,7 +270,7 @@ pub fn enemy_shoot_player(
 /// * `dist` is the Euclidean distance between the enemy and the player
 /// ### Return true if enemy should fire else false
 fn shot_chance(dist: f32) -> bool {
-    let chance = 1.0 / (5.0 * dist); // bigger distance -> lower chance
+    let chance = 1.0 / dist; // bigger distance -> lower chance
     random::<f32>() <= chance
 }
 
