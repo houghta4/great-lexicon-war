@@ -32,7 +32,7 @@ pub fn interact_with_resume_button(
 
 pub fn interact_with_quit_button(
     mut button_q: Query<(&Interaction, &mut BackgroundColor), ChangedWith<QuitButton>>,
-    mut next_app_state: ResMut<NextState<AppState>>,
+    mut next_app_state: ResMut<NextState<AppState>>
 ) {
     for (interaction, mut color) in button_q.iter_mut() {
         match *interaction {
