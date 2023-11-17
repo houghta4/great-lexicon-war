@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use crate::game::animations::components::{AnimateSprite, CharacterAnimations, MovableCharacter};
+use crate::game::animations::components::{AnimateSprite, CharacterAnimations, Firing, MovableCharacter};
 use crate::game::animations::events::CharacterMoveEvent;
 use crate::game::level::components::MovePoint;
 use crate::game::level::events::SpawnMovePointsEvent;
@@ -52,6 +52,7 @@ pub fn catch_character_move_event(
                         } else {
                             target_translation.x += 40.;
                         }
+                        target_translation.y += 50.;
                         character.0.move_target = Some((target_translation, cover_point.group_id));
                     }
                 }
@@ -125,6 +126,36 @@ pub fn move_character(
                     character.1.translation.y += y;
                 }
             }
+        }
+    }
+}
+
+/// Ticks enemy Firing timer until finished
+///
+/// When finished revert to base animation
+#[allow(clippy::type_complexity)]
+pub fn tick_and_replace_enemy_fire_timer(
+    mut commands: Commands,
+    mut firing_q: Query<(Entity, &mut Firing, &Transform), With<Firing>>,
+    time: Res<Time>,
+) {
+    for (entity, mut firing, transform) in firing_q.iter_mut() {
+        firing.timer.tick(time.delta());
+        if firing.timer.just_finished() {
+            commands.entity(entity).remove::<Firing>();
+            // inserting this replaces the old one
+            commands.entity(entity).insert((
+                SpriteSheetBundle {
+                    texture_atlas: firing.texture_atlas.clone(),
+                    sprite: TextureAtlasSprite {
+                        flip_x: firing.flip_x,
+                        ..default()
+                    },
+                    transform: *transform,
+                    ..default()
+                },
+                firing.animation.get_animation(),
+            ));
         }
     }
 }

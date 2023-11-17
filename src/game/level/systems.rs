@@ -18,7 +18,10 @@ pub fn setup_levels(mut commands: Commands) {
     commands.spawn(LevelInfo {
         map: "assets/maps/level_01.json".to_string(),
         spawn_rate: 10.0,
-        enemies: vec![Vec2::new(0.,128.), Vec2::new(750., 300.)]
+        enemies: vec![Vec2::new(550.,150.), Vec2::new(525., -50.), Vec2::new(950., 225.),
+                      Vec2::new(900., -45.), Vec2::new(1350., 205.), Vec2::new(1400., -35.),
+                      Vec2::new(1750., 190.), Vec2::new(1700., -50.), Vec2::new(2150., 170.),
+                      Vec2::new(2100., -30.)]
     });
 
     // Lv 2

@@ -33,10 +33,29 @@ impl CharacterAnimations {
             Self::GermanIdle => AnimationIndices(0, 9)
         };
         let timer = match *self {
-            Self::SovietFire => AnimationTimer(Timer::from_seconds(0.035, TimerMode::Repeating)),
+            Self::SovietFire => AnimationTimer(Timer::from_seconds(0.025, TimerMode::Repeating)),
             Self::GermanFire => AnimationTimer(Timer::from_seconds(0.035, TimerMode::Repeating)),
             _ => AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating)),
         };
         AnimateSprite(indicies, timer)
+    }
+}
+
+#[derive(Component)]
+pub struct Firing {
+    pub texture_atlas: Handle<TextureAtlas>,
+    pub animation: CharacterAnimations,
+    pub flip_x: bool,
+    pub timer: Timer,
+}
+
+impl Firing {
+    pub fn create(texture_atlas: Handle<TextureAtlas>, animation: CharacterAnimations, flip_x: bool) -> Self {
+        Firing {
+            texture_atlas,
+            animation,
+            flip_x,
+            timer: Timer::from_seconds(1.5, TimerMode::Once),
+        }
     }
 }

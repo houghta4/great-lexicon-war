@@ -1,7 +1,7 @@
 use bevy::{prelude::*, window::PrimaryWindow};
 use rand::random;
 
-use crate::game::animations::components::{AnimateSprite, CharacterAnimations, MovableCharacter};
+use crate::game::animations::components::{AnimateSprite, CharacterAnimations, Firing, MovableCharacter};
 use crate::game::enemy::components::*;
 use crate::game::enemy::events::EnemyShotEvent;
 use crate::game::enemy::resources::EnemySpawns;
@@ -187,8 +187,12 @@ pub fn catch_shot_event(
                 if let (Ok(mut enemy), Ok(player)) = (enemy_q.get_mut(parent.get()), player_q.get_single()) {
                     let distance = player.0.translation.distance(enemy.2.translation);
                     for _ in 0..5 {
-                        if determine_hit(distance, player.1.move_target.is_none(), 0.15) {
-                            enemy.0.health -= 10;
+                        if determine_hit(distance, player.1.move_target.is_none(), 0.3) {
+                            if enemy.0.health >= 10 {
+                                enemy.0.health -= 10;
+                            } else {
+                                enemy.0.health = 0;
+                            }
                             if enemy.0.health == 0 {
                                 commands.entity(parent.get()).despawn_recursive();
                             } else {
@@ -256,7 +260,7 @@ pub fn enemy_shoot_player(
                         ..default()
                     },
                     CharacterAnimations::GermanFire.get_animation(),
-                    Firing::default(),
+                    Firing::create(character_handles.german_idle.clone(), CharacterAnimations::GermanIdle, true),
                 ));
                 enemy_shot_player_event_writer.send(PlayerShotEvent(distance));
             }
@@ -269,11 +273,11 @@ pub fn enemy_shoot_player(
 /// * `dist` is the Euclidean distance between the enemy and the player
 /// ### Return true if enemy should fire else false
 fn shot_chance(dist: f32) -> bool {
-    let chance = 1.0 / (5.0 * dist); // bigger distance -> lower chance
+    let chance = 1.0 / dist; // bigger distance -> lower chance
     random::<f32>() <= chance
 }
 
-/// Ticks enemy Firing timer until finished
+/*/// Ticks enemy Firing timer until finished
 ///
 /// When finished revert to base animation
 #[allow(clippy::type_complexity)]
@@ -303,7 +307,7 @@ pub fn tick_and_replace_enemy_fire_timer(
             ));
         }
     }
-}
+}*/
 
 /// Test with --nocapture to see prints
 #[cfg(test)]

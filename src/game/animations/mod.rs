@@ -18,7 +18,7 @@ impl Plugin for AnimationPlugin {
 
         app.add_systems(
             Update,
-            (animate_sprite, move_character, catch_character_move_event)
+            (animate_sprite, move_character, catch_character_move_event, tick_and_replace_enemy_fire_timer)
                 .run_if(in_state(AppState::InGame))
                 .run_if(in_state(InGameState::Running)),
         ).add_event::<CharacterMoveEvent>();

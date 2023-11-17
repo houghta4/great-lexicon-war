@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use crate::AppState;
-use crate::game::animations::components::{CharacterAnimations, MovableCharacter};
+use crate::game::animations::components::{CharacterAnimations, Firing, MovableCharacter};
 use crate::game::enemy::events::EnemyShotEvent;
 use crate::game::resources::CharacterHandles;
 use crate::game::utils::determine_hit;
@@ -77,17 +77,30 @@ pub fn player_take_damage(
 ///
 /// This is triggered by the `Player` when a `WordTarget::Enemy` is typed
 pub fn player_shot_enemy(
-    mut player_q: Query<&mut Player>,
+    mut commands: Commands,
+    mut player_q: Query<(&mut Player, Entity, &Transform)>,
+    character_handles: Res<CharacterHandles>,
     mut enemy_shot_event_reader: EventReader<EnemyShotEvent>,
 ) {
     for _ in enemy_shot_event_reader.iter() {
-        if let Ok(mut player) = player_q.get_single_mut() {
+        if let Ok((mut player, player_entity, transform)) = player_q.get_single_mut() {
             if player.ammo.0 > 0 {
                 player.ammo.0 -= 5; // TODO: subtract by gun's burst amount
+                commands.entity(player_entity).insert((
+                    SpriteSheetBundle {
+                        texture_atlas: character_handles.soviet_fire.clone(),
+                        sprite: TextureAtlasSprite {
+                            ..default()
+                        },
+                        transform: *transform,
+                        ..default()
+                    },
+                    CharacterAnimations::SovietFire.get_animation(),
+                    Firing::create(character_handles.soviet_idle.clone(), CharacterAnimations::SovietIdle, false),
+                ));
             } else {
                 player.ammo.0 = 0;
             }
-            //TODO: animation switch?
         }
     }
 }
