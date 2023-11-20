@@ -1,3 +1,5 @@
+extern crate core;
+
 mod components;
 mod events;
 mod game;
@@ -16,6 +18,7 @@ use game::InGamePlugin;
 use systems::*;
 use crate::game_over::GameOverPlugin;
 use crate::level_completed::LevelCompletedPlugin;
+use crate::main_menu::MainMenuPlugin;
 
 fn main() {
     println!("\n<< ---------Dev Commands--------- >>");
@@ -45,7 +48,7 @@ fn main() {
         //States
         .add_state::<AppState>()
         // Custom plugins
-        .add_plugins((InGamePlugin, LevelCompletedPlugin, GameOverPlugin))
+        .add_plugins((InGamePlugin, LevelCompletedPlugin, GameOverPlugin, MainMenuPlugin))
         // Startup Systems
         .add_systems(Startup, spawn_camera)
         .run();
@@ -54,9 +57,9 @@ fn main() {
 #[derive(States, Debug, Clone, Copy, Eq, PartialEq, Hash, Default)]
 pub enum AppState {
     // mm should be default once it is created
-    // #[default]
-    MainMenu,
     #[default]
+    MainMenu,
+    //#[default]
     InGame, // inside Game plug in have Running and Paused states
     GameOver,
     LevelCompleted
