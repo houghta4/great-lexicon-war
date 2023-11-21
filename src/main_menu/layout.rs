@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use bevy::utils::default;
 use crate::main_menu::components::*;
+use crate::main_menu::resources::SaveInfo;
 
 pub fn spawn_main_menu(mut commands: Commands, asset_server: Res<AssetServer>) {
     let font: Handle<Font> = asset_server.load("fonts/propaganda/propaganda.ttf");
@@ -238,19 +239,20 @@ pub fn despawn_faction_menu(mut commands: Commands, menu_q: Query<Entity, With<F
     }
 }
 
-pub fn spawn_german_campaign_menu(commands: Commands, asset_server: Res<AssetServer>) {
-    spawn_campaign_menu(commands, asset_server, Faction::German);
+pub fn spawn_german_campaign_menu(commands: Commands, asset_server: Res<AssetServer>, save_info: Res<SaveInfo>) {
+    spawn_campaign_menu(commands, asset_server, save_info, Faction::German);
 }
 
-pub fn spawn_soviet_campaign_menu(commands: Commands, asset_server: Res<AssetServer>) {
-    spawn_campaign_menu(commands, asset_server, Faction::Soviet);
+pub fn spawn_soviet_campaign_menu(commands: Commands, asset_server: Res<AssetServer>, save_info: Res<SaveInfo>) {
+    spawn_campaign_menu(commands, asset_server, save_info, Faction::Soviet);
 }
 
 fn spawn_campaign_menu(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
+    save_info: Res<SaveInfo>,
     faction: Faction) {
-
+    let faction_status = save_info.get_faction_status(faction);
     let font: Handle<Font> = asset_server.load("fonts/propaganda/propaganda.ttf");
 
     commands.spawn((
@@ -288,29 +290,67 @@ fn spawn_campaign_menu(
             ));
         });
 
-        for i in 1..10 {
+        for i in 0..faction_status.levels.len() {
+            let level_status = &faction_status.levels[i];
             builder.spawn((
                 ButtonBundle {
                     style: Style {
                         justify_items: JustifyItems::Center,
                         justify_content: JustifyContent::Center,
                         align_items: AlignItems::Center,
-                        margin: UiRect::right(Val::Px(50.)),
+                        margin: UiRect::horizontal(Val::Percent(2.5)),
                         ..default()
                     },
                     image: UiImage::new(asset_server.load("sprites/ui/button.png")),
                     ..default()
                 },
-                MenuButton(ButtonType::LevelSelect(i))
+                MenuButton(ButtonType::LevelSelect(faction, i))
             )).with_children(|builder| {
-                builder.spawn(TextBundle::from_section(
-                    i.to_string(),
-                    TextStyle {
-                        font: font.clone(),
-                        font_size: 20.0,
-                        color: Color::BLACK
+                builder.spawn(NodeBundle {
+                    style: Style {
+                        width: Val::Percent(100.0),
+                        height: Val::Percent(100.0),
+                        display: Display::Grid,
+                        grid_template_columns: RepeatedGridTrack::flex(1, 1.),
+                        grid_template_rows: RepeatedGridTrack::flex(2, 1.),
+                        flex_direction: FlexDirection::Column,
+                        justify_items: JustifyItems::Center,
+                        justify_content: JustifyContent::Center,
+                        align_items: AlignItems::Center,
+                        padding: UiRect::vertical(Val::Percent(15.)),
+                        ..default()
+                    },
+                    ..default()
+                }).with_children(|builder| {
+                    builder.spawn(TextBundle::from_section(
+                        level_status.id.to_string(),
+                        TextStyle {
+                            font: font.clone(),
+                            font_size: 20.0,
+                            color: Color::BLACK
+                        }
+                    ));
+                    if !level_status.locked {
+                        builder.spawn(TextBundle::from_sections(vec![
+                            TextSection::new(format!("{}/100", level_status.points).to_string(),
+                                             TextStyle {
+                                                 font: font.clone(),
+                                                 font_size: 20.0,
+                                                 color: Color::BLACK
+                                             }
+                            )
+                        ]));
+                    } else {
+                        builder.spawn(TextBundle::from_section(
+                           "Locked".to_string(),
+                           TextStyle {
+                               font: font.clone(),
+                               font_size: 20.0,
+                               color: Color::BLACK
+                           }
+                        ));
                     }
-                ));
+                });
             });
         }
 
