@@ -2,20 +2,26 @@ mod systems;
 mod layout;
 mod components;
 mod interactions;
+mod resources;
 
 use bevy::app::App;
-use bevy::prelude::{in_state, IntoSystemConfigs, OnEnter, OnExit, Plugin, States, Update};
+use bevy::prelude::*;
 use crate::AppState;
 use crate::main_menu::interactions::interact_with_play_button;
-use crate::main_menu::layout::{despawn_main_menu, spawn_main_menu, spawn_faction_menu, despawn_faction_menu, despawn_campaign_menu, spawn_settings_menu, despawn_settings_menu, spawn_soviet_campaign_menu, spawn_german_campaign_menu, spawn_german_loadout_menu, spawn_soviet_loadout_menu, despawn_loadout_menu};
-use crate::main_menu::systems::enter_main_menu;
+use crate::main_menu::layout::*;
+use crate::main_menu::resources::SaveInfo;
+use crate::main_menu::systems::*;
 
 pub struct MainMenuPlugin;
 
 impl Plugin for MainMenuPlugin {
     fn build(&self, app: &mut App) {
         app
+            .insert_resource(load_save())
             .add_state::<MainMenuState>()
+            // By default detecting changes will also trigger if the resource was
+            // just added, so I will add a second condition to make sure the resource wasn't just added
+            .add_systems(Update, save_save.run_if(resource_changed::<SaveInfo>().and_then(not(resource_added::<SaveInfo>()))))
             .add_systems(OnEnter(AppState::MainMenu), enter_main_menu)
             .add_systems(OnEnter(MainMenuState::Main), spawn_main_menu)
             .add_systems(Update, interact_with_play_button.run_if(in_state(AppState::MainMenu)))
@@ -37,7 +43,6 @@ impl Plugin for MainMenuPlugin {
 
 #[derive(States, Debug, Clone, Copy, Eq, PartialEq, Hash, Default)]
 pub enum MainMenuState {
-    #[default]
     Main,
     Faction,
     SovietCampaign,
@@ -45,5 +50,6 @@ pub enum MainMenuState {
     SovietLoadout,
     GermanLoadout,
     Settings,
+    #[default]
     Exit
 }

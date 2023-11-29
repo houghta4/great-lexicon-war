@@ -24,7 +24,7 @@ pub enum ButtonType {
     Settings,
     Faction(Faction),
     Loadout(Faction),
-    LevelSelect(usize),
+    LevelSelect(Faction, usize),
     ReturnToMain,
     Quit
 }

@@ -6,6 +6,7 @@ use crate::main_menu::components::{ButtonType, Faction, MenuButton};
 use crate::main_menu::MainMenuState;
 use crate::utils::ChangedWith;
 use crate::game::level::resources::Level;
+use crate::main_menu::resources::SaveInfo;
 
 pub fn interact_with_play_button(
     asset_server: Res<AssetServer>,
@@ -13,7 +14,8 @@ pub fn interact_with_play_button(
     mut next_menu_state: ResMut<NextState<MainMenuState>>,
     mut next_game_state: ResMut<NextState<AppState>>,
     mut level: ResMut<Level>,
-    mut app_exit_events: ResMut<Events<AppExit>>
+    mut app_exit_events: ResMut<Events<AppExit>>,
+    save_info: Res<SaveInfo>
 ) {
     let button_interact = asset_server.load("sprites/ui/button_interact.png");
     let button = asset_server.load("sprites/ui/button.png");
@@ -52,10 +54,12 @@ pub fn interact_with_play_button(
                             }
                         }
                     }
-                    ButtonType::LevelSelect(id) => {
-                        level.0 = id;
-                        next_menu_state.set(MainMenuState::Exit);
-                        next_game_state.set(AppState::InGame);
+                    ButtonType::LevelSelect(faction, id) => {
+                        if !save_info.get_faction_status(faction).levels[id].locked {
+                            level.0 = id;
+                            next_menu_state.set(MainMenuState::Exit);
+                            next_game_state.set(AppState::InGame);
+                        }
                     }
                     ButtonType::ReturnToMain => {
                         next_menu_state.set(MainMenuState::Main);
