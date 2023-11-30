@@ -50,8 +50,8 @@ pub fn spawn_word(builder: &mut ChildBuilder, word: &str, font: &Handle<Font>, w
             builder.spawn(SpriteBundle {
                 sprite: Sprite {
                     color: Color::BLACK,
-                    // will need to scale this black bar to word size, keep 80 as minimum
-                    custom_size: Some(Vec2::new(80.0, 20.0)),
+                    // keep 80 as minimum so health bar is always within the bounds
+                    custom_size: Some(Vec2::new(f32::max(8. * word.len() as f32, 80.), 20.)),
                     ..default()
                 },
                 transform: Transform::from_translation(Vec3::new(0., 0., -1.)),
