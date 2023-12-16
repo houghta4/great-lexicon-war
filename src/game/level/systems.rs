@@ -16,7 +16,7 @@ use super::{
 pub fn setup_levels(mut commands: Commands) {
     // Lv 1
     commands.spawn(LevelInfo {
-        map: "assets/maps/level_01.json".to_string(),
+        map: "assets/maps/level_01.toml".to_string(),
         spawn_rate: 10.0,
         enemies: vec![Vec2::new(550.,150.), Vec2::new(525., -50.), Vec2::new(950., 225.),
                       Vec2::new(900., -45.), Vec2::new(1350., 205.), Vec2::new(1400., -35.),
@@ -26,7 +26,7 @@ pub fn setup_levels(mut commands: Commands) {
 
     // Lv 2
     commands.spawn(LevelInfo {
-        map: "assets/maps/level_01.json".to_string(),
+        map: "assets/maps/level_01.toml".to_string(),
         spawn_rate: 3.0,
         enemies: vec![Vec2::new(0., 0.)]
     });
@@ -50,12 +50,12 @@ pub fn init_level(mut level_init_event: EventWriter<LevelInitEvent>) {
 
 fn parse_tiled_map(map_path: &str) -> Result<TiledMap, Box<dyn std::error::Error>> {
     let map_json = std::fs::read_to_string(map_path)?;
-    serde_json::from_str(&map_json).map_err(|err| Box::new(err) as Box<dyn std::error::Error>)
+    toml::from_str(&map_json).map_err(|err| Box::new(err) as Box<dyn std::error::Error>)
 }
 
 fn parse_tileset(tileset_path: &str) -> Result<Tileset, Box<dyn std::error::Error>> {
     let tileset_json = std::fs::read_to_string(tileset_path)?;
-    serde_json::from_str(&tileset_json).map_err(|err| Box::new(err) as Box<dyn std::error::Error>)
+    toml::from_str(&tileset_json).map_err(|err| Box::new(err) as Box<dyn std::error::Error>)
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -88,7 +88,7 @@ pub fn render_level_data(
 
             // Sprite sheet
             let texture_handle: Handle<Image> = asset_server.load("sprites/terrain/spring_tileset.png");
-            if let Ok(tileset_data) = parse_tileset("assets/sprites/terrain/spring_tileset.json") {
+            if let Ok(tileset_data) = parse_tileset("assets/sprites/terrain/spring_tileset.toml") {
                 let texture_atlas =
                     TextureAtlas::from_grid(texture_handle, Vec2::new(tileset_data.size, tileset_data.size), tileset_data.columns, tileset_data.rows, None, None);
                 let texture_atlas_handle = texture_atlases.add(texture_atlas);
@@ -125,10 +125,10 @@ pub fn render_level_data(
                 let objective_texture_handle: Handle<Image> = asset_server.load("sprites/objects/objectives.png");
 
                 if let (Ok(tree_data), Ok(stone_data), Ok(barrier_data), Ok(objective_data)) =
-                    (parse_tileset("assets/sprites/objects/trees.json"),
-                     parse_tileset("assets/sprites/objects/stones.json"),
-                     parse_tileset("assets/sprites/objects/barriers.json"),
-                     parse_tileset("assets/sprites/objects/objectives.json")) {
+                    (parse_tileset("assets/sprites/objects/trees.toml"),
+                     parse_tileset("assets/sprites/objects/stones.toml"),
+                     parse_tileset("assets/sprites/objects/barriers.toml"),
+                     parse_tileset("assets/sprites/objects/objectives.toml")) {
                     let tree_texture_atlas =
                         TextureAtlas::from_grid(tree_texture_handle, Vec2::new(tree_data.size, tree_data.size), tree_data.columns, tree_data.rows, None, None);
                     let tree_atlas_handle = texture_atlases.add(tree_texture_atlas);

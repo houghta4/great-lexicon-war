@@ -1,0 +1,207 @@
+width = 8
+height = 2
+tilewidth = 512
+tileheight = 512
+
+[[layers]]
+name = "tiles"
+data = [
+    0, 1, 0, 0, 1, 2, 3, 3,
+    0, 1, 0, 1, 0, 5, 3, 4
+]
+
+[[objects]]
+class.type = "Tree"
+id = 0
+x = -500
+y = 250
+
+[[objects]]
+class.type = "Stone"
+id = 0
+x = -475
+y = 0
+
+[[objects]]
+class.type = "Stone"
+id = 1
+x = 250
+y = -150
+
+[[objects]]
+class.type = "Tree"
+id = 2
+x = 600
+y = -200
+
+[[objects]]
+class.type = "Tree"
+id = 1
+x = 1050
+y = 0
+
+[[objects]]
+class.type = "Tree"
+id = 2
+x = 1300
+y = 500
+
+[[objects]]
+class.type = "Tree"
+id = 0
+x = 1500
+y = -100
+
+[[objects]]
+class.type = "Stone"
+id = 0
+x = 1200
+y = 50
+
+[[objects]]
+class.type = "Stone"
+id = 0
+x = 1800
+y = -150
+
+[[objects]]
+class.type = "Stone"
+id = 1
+x = 1900
+y = 100
+
+[[objects]]
+class.type = "Stone"
+id = 0
+x = 2400
+y = -200
+
+[[objects]]
+class.type = "Tree"
+id = 2
+x = 2200
+y = -100
+
+#Barrier Group 0
+[[objects]]
+id = 0
+x = 100
+y = 100
+
+[objects.class]
+type = "Barrier"
+args = 0
+
+[[objects]]
+id = 0
+x = 100
+y = -100
+
+[objects.class]
+type = "Barrier"
+args = 0
+
+#Barrier Group 1
+[[objects]]
+id = 0
+x = 500
+y = 100
+
+[objects.class]
+type = "Barrier"
+args = 1
+
+[[objects]]
+id = 0
+x = 475
+y = -100
+
+[objects.class]
+type = "Barrier"
+args = 1
+
+#Barrier Group 2
+[[objects]]
+id = 0
+x = 900
+y = 150
+
+[objects.class]
+type = "Barrier"
+args = 2
+
+[[objects]]
+id = 0
+x = 850
+y = -95
+
+[objects.class]
+type = "Barrier"
+args = 2
+
+#Barrier Group 3
+[[objects]]
+id = 0
+x = 1300
+y = 160
+
+[objects.class]
+type = "Barrier"
+args = 3
+
+[[objects]]
+id = 0
+x = 1350
+y = -85
+
+[objects.class]
+type = "Barrier"
+args = 3
+
+#Barrier Group 4
+[[objects]]
+id = 0
+x = 1700
+y = 140
+
+[objects.class]
+type = "Barrier"
+args = 4
+
+[[objects]]
+id = 0
+x = 1650
+y = -100
+
+[objects.class]
+type = "Barrier"
+args = 4
+
+#Barrier Group 5
+[[objects]]
+id = 0
+x = 2100
+y = 120
+
+[objects.class]
+type = "Barrier"
+args = 5
+
+[[objects]]
+id = 0
+x = 2050
+y = -80
+
+[objects.class]
+type = "Barrier"
+args = 5
+
+#Objective Group 6
+[[objects]]
+id = 0
+x = 2600
+y = 0
+
+[objects.class]
+type = "Objective"
+args = 6
