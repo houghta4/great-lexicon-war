@@ -24,6 +24,7 @@ pub struct MapObject {
 }
 
 #[derive(Serialize, Deserialize)]
+#[serde(tag = "type", content = "args")]
 pub enum MapObjectClass {
     Barrier(u32),
     Objective(u32),
