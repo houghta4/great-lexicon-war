@@ -62,6 +62,7 @@ pub fn update_reload_word(
 ) {
     if let Ok((mut text, mut word)) = reload_q.get_single_mut() {
         let w = word_bank.get_word(WordComplexity::Easy, &word_q);
+        text.sections[0].value = "".to_string();
         text.sections[1].value = w.to_owned();
         word.1 = w.to_owned();
     }
@@ -137,6 +138,7 @@ pub fn update_heal_word(
     if let Ok(player) = player_q.get_single() {
         if let Ok((mut text, mut word)) = heal_q.get_single_mut() {
             let w = word_bank.get_word(WordComplexity::Easy, &word_q);
+            text.sections[0].value = "".to_string();
             text.sections[1].value = w.to_owned();
             word.1 = w.to_owned();
 

@@ -304,7 +304,7 @@ fn spawn_campaign_menu(
                     image: UiImage::new(asset_server.load("sprites/ui/button.png")),
                     ..default()
                 },
-                MenuButton(ButtonType::LevelSelect(faction, i))
+                MenuButton(ButtonType::LevelSelect(faction, level_status.id))
             )).with_children(|builder| {
                 builder.spawn(NodeBundle {
                     style: Style {

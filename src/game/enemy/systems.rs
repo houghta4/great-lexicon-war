@@ -6,8 +6,9 @@ use crate::game::enemy::components::*;
 use crate::game::enemy::events::EnemyShotEvent;
 use crate::game::enemy::resources::EnemySpawns;
 use crate::game::input::components::InputText;
-use crate::game::level::components::LevelInfo;
-use crate::game::level::events::LevelInitEvent;
+use crate::game::level::components::LevelData;
+use crate::game::level::events::{EnemyKilledEvent, LevelInitEvent};
+use crate::game::level::resources::LevelInfo;
 use crate::game::player::components::Player;
 use crate::game::player::events::PlayerShotEvent;
 use crate::game::resources::{CharacterHandles, RandomWord, WordBank};
@@ -96,17 +97,18 @@ pub fn spawn_initial_enemies(
 /// Set resources once we progress to a new level
 pub fn init_enemy_level_info(
     mut commands: Commands,
-    level_info_q: Query<&LevelInfo>,
+    level_data_q: Query<&LevelData>,
+    level_info: Res<LevelInfo>,
     mut level_init_event_reader: EventReader<LevelInitEvent>,
 ) {
-    for level in level_init_event_reader.iter() {
-        if let Some(level_info) = level_info_q.iter().nth(level.0) {
+    for _level in level_init_event_reader.iter() {
+        if let Some(level_data) = level_data_q.iter().nth(level_info.get_id() - 1) {
             println!("Inserting resources");
             commands.insert_resource(EnemySpawnTimer {
-                timer: Timer::from_seconds(level_info.spawn_rate, TimerMode::Repeating),
+                timer: Timer::from_seconds(level_data.spawn_rate, TimerMode::Repeating),
             });
             commands.insert_resource(EnemySpawns {
-                enemies: level_info.enemies.clone(),
+                enemies: level_data.enemies.clone(),
             });
         }
     }
@@ -178,7 +180,8 @@ pub fn catch_shot_event(
     asset_server: Res<AssetServer>,
     mut word_bank: ResMut<WordBank>,
     word_q: Query<&Word, (With<Word>, Without<InputText>)>,
-    player_q: Query<(&Transform, &MovableCharacter), With<Player>>
+    player_q: Query<(&Transform, &MovableCharacter), With<Player>>,
+    mut enemy_killed_writer: EventWriter<EnemyKilledEvent>
 ) {
     let font: Handle<Font> = asset_server.load("fonts/fyodor/truetype/Fyodor-BoldCondensed.ttf");
     for shot in shot_event_reader.iter() {
@@ -187,13 +190,15 @@ pub fn catch_shot_event(
                 if let (Ok(mut enemy), Ok(player)) = (enemy_q.get_mut(parent.get()), player_q.get_single()) {
                     let distance = player.0.translation.distance(enemy.2.translation);
                     for _ in 0..5 {
-                        if determine_hit(distance, player.1.move_target.is_none(), 0.3) {
+                        if enemy.0.health > 0 && determine_hit(distance, player.1.move_target.is_none(), 0.3) {
                             if enemy.0.health >= 10 {
                                 enemy.0.health -= 10;
                             } else {
                                 enemy.0.health = 0;
                             }
                             if enemy.0.health == 0 {
+                                println!("enemy killed!");
+                                enemy_killed_writer.send(EnemyKilledEvent);
                                 commands.entity(parent.get()).despawn_recursive();
                             } else {
                                 //TODO: better way to get the child sprite/transform than this?

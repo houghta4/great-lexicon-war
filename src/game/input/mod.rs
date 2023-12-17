@@ -4,9 +4,11 @@ use crate::game::input::resource::BackspaceTimer;
 use crate::game::input::systems::*;
 use crate::AppState;
 
+use self::events::InputEvent;
 use super::InGameState;
 
 pub mod components;
+pub mod events;
 mod resource;
 mod systems;
 
@@ -17,7 +19,9 @@ pub struct TextInputPlugin;
 **/
 impl Plugin for TextInputPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(
+        app
+            .add_event::<InputEvent>()
+            .add_systems(
                 Update,
                 (
                     listen_received_character_events,

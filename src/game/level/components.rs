@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Component, Debug)]
-pub struct LevelInfo {
+pub struct LevelData {
     pub map: String,
     pub spawn_rate: f32,
     pub enemies: Vec<Vec2>

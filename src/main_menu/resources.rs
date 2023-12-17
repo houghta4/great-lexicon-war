@@ -21,6 +21,21 @@ impl SaveInfo {
 			}
 		}
 	}
+
+	fn get_mut_faction_status(&mut self, faction: Faction) -> &mut FactionStatus {
+		match faction {
+			Faction::German => {
+				&mut self.german_status
+			},
+			Faction::Soviet => {
+				&mut self.soviet_status
+			}
+		}
+	}
+
+	pub fn post_level_result(&mut self, faction: Faction, id: usize, points: usize, objectives: Vec<String>) {
+		self.get_mut_faction_status(faction).post_level_result(id, points, objectives);
+	}
 }
 
 #[derive(Default, Deserialize, Serialize)]
@@ -34,6 +49,17 @@ pub struct FactionStatus {
 	pub loadout: LoadoutStatus,
 	pub unlocks: Vec<String>,
 	pub levels: Vec<LevelStatus>
+}
+
+impl FactionStatus {
+	fn post_level_result(&mut self, id: usize, points: usize, objectives: Vec<String>) {
+		for level in &mut self.levels {
+			if level.id == id {
+				level.post_level_result(points, objectives);
+				break;
+			}
+		}
+	}
 }
 
 impl Default for FactionStatus {
@@ -98,8 +124,17 @@ pub struct LoadoutStatus {
 
 #[derive(Default, Deserialize, Serialize)]
 pub struct LevelStatus {
-	pub id: u32,
-	pub points: u32,
+	pub id: usize,
+	pub points: usize,
 	pub locked: bool,
 	pub objectives: Vec<String>
+}
+
+impl LevelStatus {
+	fn post_level_result(&mut self, points: usize, _objectives: Vec<String>) {
+		if points > self.points {
+			self.points = points;
+		}
+		//TODO: objectives
+	}
 }

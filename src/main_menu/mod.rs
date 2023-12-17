@@ -1,8 +1,8 @@
 mod systems;
 mod layout;
-mod components;
+pub mod components;
 mod interactions;
-mod resources;
+pub mod resources;
 
 use bevy::app::App;
 use bevy::prelude::*;
