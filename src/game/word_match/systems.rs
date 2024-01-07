@@ -1,6 +1,7 @@
 use crate::game::animations::events::CharacterMoveEvent;
 use crate::game::enemy::events::EnemyShotEvent;
 use crate::game::input::components::InputText;
+use crate::game::level::events::TypoEvent;
 use crate::game::player::components::Player;
 use crate::game::player::events::{PlayerHealEvent, PlayerReloadEvent};
 use crate::game::word_match::components::{Word, WordTarget};
@@ -11,7 +12,7 @@ use std::cmp;
 /**
     Checks for matches between Words and user input
 **/
-#[allow(clippy::type_complexity)]
+#[allow(clippy::type_complexity, clippy::too_many_arguments)]
 pub fn check_matches(
     mut input_text: Query<&mut Text, With<InputText>>,
     mut words: Query<(&mut Text, &Word), (With<Word>, Without<InputText>)>,
@@ -19,11 +20,14 @@ pub fn check_matches(
     mut reload_event_writer: EventWriter<PlayerReloadEvent>,
     mut heal_event_writer: EventWriter<PlayerHealEvent>,
     player_q: Query<&Player>,
-    mut move_event_writer: EventWriter<CharacterMoveEvent>
+    mut move_event_writer: EventWriter<CharacterMoveEvent>,
+    mut typo_writer: EventWriter<TypoEvent>
 ) {
     let input_str = input_text.single_mut().sections[0].value.to_string();
+    let mut has_match = false;
     for (mut text, word) in &mut words {
         if input_str.is_empty() {
+            has_match = true;
             if !text.sections[0].value.is_empty() {
                 text.sections[0].value = "".to_string();
                 text.sections[1].value = word.1.to_string();
@@ -58,6 +62,7 @@ pub fn check_matches(
                 remaining = word.1.to_string()[input_str.len()..].to_string();
             }
 
+            has_match = has_match || !completed.is_empty();
             text.sections[0].value = completed;
             text.sections[1].value = remaining;
         }
@@ -69,6 +74,10 @@ pub fn check_matches(
                         // TODO: eventually check if ammo > gun's ammo consumption per shot
                         if player.ammo.0 > 0 {
                             enemy_event_writer.send(EnemyShotEvent(id));
+                        } else {
+                            // reset as this won't get run until we get another input event
+                            text.sections[1].value = text.sections[0].value.clone();
+                            text.sections[0].value = "".to_string()
                         }
                     }
                 }
@@ -93,6 +102,11 @@ pub fn check_matches(
             }
             break;
         }
+    }
+
+    if !has_match {
+        input_text.single_mut().sections[0].value = "".to_string();
+        typo_writer.send(TypoEvent);
     }
 }
 

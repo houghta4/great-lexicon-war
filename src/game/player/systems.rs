@@ -63,7 +63,7 @@ pub fn player_take_damage(
                         player.health -= PLAYER_DAMAGE;
                     } else {
                         player.health = 0.0;
-                        next_app_state.set(AppState::GameOver);
+                        next_app_state.set(AppState::LevelCompleted);
                     }
                 } else {
                     println!("player miss!");

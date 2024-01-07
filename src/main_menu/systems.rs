@@ -20,6 +20,7 @@ pub fn load_save() -> SaveInfo {
 }
 
 pub fn save_save(save_info: Res<SaveInfo>) {
+    println!("saving!");
     let toml = toml::to_string_pretty(save_info.into_inner()).expect("Unable to convert save info to toml");
     let app_data = std::env::var("LOCALAPPDATA").expect("No LOCALAPPDATA directory");
     std::fs::write(format!("{}/GreatLexiconWar/save.toml", app_data), toml).expect("Unable to write save file");

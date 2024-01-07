@@ -1,0 +1,59 @@
+width = 4
+height = 2
+tilewidth = 512
+tileheight = 512
+
+[[layers]]
+name = "tiles"
+data = [
+	0, 1, 0, 0,
+	0, 1, 0, 1
+]
+
+#Barrier Group 0
+[[objects]]
+id = 0
+x = 100
+y = 100
+
+[objects.class]
+type = "Barrier"
+args = 0
+
+[[objects]]
+id = 0
+x = 100
+y = -100
+
+[objects.class]
+type = "Barrier"
+args = 0
+
+#Barrier Group 1
+[[objects]]
+id = 0
+x = 500
+y = 100
+
+[objects.class]
+type = "Barrier"
+args = 1
+
+[[objects]]
+id = 0
+x = 475
+y = -100
+
+[objects.class]
+type = "Barrier"
+args = 1
+
+#Objective Group 2
+[[objects]]
+id = 0
+x = 900
+y = 0
+
+[objects.class]
+type = "Objective"
+args = 2

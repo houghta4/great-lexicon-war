@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use crate::game::animations::components::{AnimateSprite, CharacterAnimations, Firing, MovableCharacter};
 use crate::game::animations::events::CharacterMoveEvent;
 use crate::game::level::components::MovePoint;
-use crate::game::level::events::SpawnMovePointsEvent;
+use crate::game::level::events::{ProgressEvent, SpawnMovePointsEvent};
 use crate::game::resources::CharacterHandles;
 
 // Sometimes the edges are white. Possible issues: z-index fighting, need background
@@ -78,6 +78,7 @@ pub fn move_character(
     mut commands: Commands,
     mut character_q: Query<(&mut MovableCharacter, &mut Transform, Entity), With<MovableCharacter>>,
     mut barrier_event_writer: EventWriter<SpawnMovePointsEvent>,
+    mut progress_writer: EventWriter<ProgressEvent>,
     character_handles: Res<CharacterHandles>,
     time: Res<Time>) {
 
@@ -100,6 +101,7 @@ pub fn move_character(
                     ));
                     character.0.move_target = None;
                     barrier_event_writer.send(SpawnMovePointsEvent(move_target.1));
+                    progress_writer.send(ProgressEvent);
                 } else if x_diff == 0. {
                     if y_diff > 0. {
                         character.1.translation.y -= 5.;

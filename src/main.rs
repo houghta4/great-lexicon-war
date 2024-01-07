@@ -3,7 +3,6 @@ extern crate core;
 mod components;
 mod events;
 mod game;
-mod game_over;
 mod main_menu;
 mod systems;
 mod utils;
@@ -16,7 +15,6 @@ use bevy::{
 };
 use game::InGamePlugin;
 use systems::*;
-use crate::game_over::GameOverPlugin;
 use crate::level_completed::LevelCompletedPlugin;
 use crate::main_menu::MainMenuPlugin;
 
@@ -48,7 +46,7 @@ fn main() {
         //States
         .add_state::<AppState>()
         // Custom plugins
-        .add_plugins((InGamePlugin, LevelCompletedPlugin, GameOverPlugin, MainMenuPlugin))
+        .add_plugins((InGamePlugin, LevelCompletedPlugin, MainMenuPlugin))
         // Startup Systems
         .add_systems(Startup, spawn_camera)
         .run();
@@ -61,6 +59,5 @@ pub enum AppState {
     MainMenu,
     //#[default]
     InGame, // inside Game plug in have Running and Paused states
-    GameOver,
     LevelCompleted
 }
